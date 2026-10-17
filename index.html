@@ -2,6 +2,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="manifest" href="manifest.json"><link rel="icon" href="icon.svg"><link rel="apple-touch-icon" href="icon.svg">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<script src="firebase-config.js"></script>
 </head><body>
 <title>Ari's Feeding Clock</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -191,6 +192,7 @@ input, select {
     </div>
     <p class="note" id="notif-note"></p>
     <button class="small" id="btn-notif" type="button" hidden>Turn on notifications</button>
+    <p class="note" id="sync-note" hidden></p>
   </section>
 
   <!-- History -->
@@ -239,9 +241,14 @@ input, select {
     <label class="field"><span>Reminder sound</span>
       <select id="set-sound"><option value="on">Chime</option><option value="off">Silent</option></select>
     </label>
+    <div class="panel" style="background:var(--milk)" id="share-zone" hidden>
+      <span class="label">Share with family</span>
+      <p class="note">Everyone who opens this link sees the same log, countdown and reminders.</p>
+      <div><button type="button" class="small" id="btn-share">Copy share link</button> <span class="note" id="share-note"></span></div>
+    </div>
     <div class="panel" style="background:var(--milk)">
       <span class="label">Start over</span>
-      <p class="note">Clears every logged feed on this device.</p>
+      <p class="note" id="reset-note">Clears every logged feed on this device.</p>
       <div id="reset-zone"><button type="button" class="small" id="btn-reset">Clear all data</button></div>
     </div>
     <div class="sheet-actions">
@@ -265,7 +272,66 @@ input, select {
     const raw = localStorage.getItem(KEY);
     if (raw) state = Object.assign(blank(), JSON.parse(raw));
   } catch (e) { memoryOnly = true; }
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { memoryOnly = true; } };
+  const saveLocal = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { memoryOnly = true; } };
+  const save = () => { saveLocal(); pushSettings(); };
+
+  // ---------- family sync (Firebase) ----------
+  // When firebase-config.js provides a config, the log lives in Firestore under
+  // families/{id} (settings) and families/{id}/feeds/{feedId}, shared by everyone
+  // who opens the ?family=<id> link. Without a config the app stays on-device only.
+  const FAMILY_KEY = 'feeding-tracker.family';
+  const FB = 'https://www.gstatic.com/firebasejs/10.12.2/';
+  const fbConfig = window.FEEDS_FIREBASE_CONFIG && window.FEEDS_FIREBASE_CONFIG.projectId ? window.FEEDS_FIREBASE_CONFIG : null;
+  let remote = null;
+  let syncState = fbConfig ? 'connecting' : 'off';
+  const store = { get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
+  const newId = () => Array.from(crypto.getRandomValues(new Uint8Array(9)), (b) => b.toString(36).padStart(2, '0')).join('').slice(0, 14);
+  let familyId = null;
+  if (fbConfig) {
+    const fromUrl = new URLSearchParams(location.search).get('family');
+    familyId = (fromUrl && /^[a-z0-9]{6,40}$/.test(fromUrl) ? fromUrl : null) || store.get(FAMILY_KEY);
+    if (familyId && familyId !== store.get(FAMILY_KEY) && fromUrl) state.feeds = []; // joined someone else's log
+  }
+  const shareUrl = () => { const u = new URL(location.href); u.hash = ''; u.search = ''; u.searchParams.set('family', familyId); return u.toString(); };
+  const sharedSettings = () => ({ name: state.name, intervalMin: state.intervalMin, snoozeMin: state.snoozeMin, snoozeUntil: state.snoozeUntil || null, updatedAt: Date.now() });
+  const syncErr = () => { syncState = 'error'; renderSync(); };
+  function pushSettings() { if (remote) remote.fs.setDoc(remote.famRef, sharedSettings(), { merge: true }).catch(syncErr); }
+  function pushFeed(f) { if (remote) remote.fs.setDoc(remote.fs.doc(remote.feedsCol, f.id), { time: f.time, oz: f.oz }).catch(syncErr); }
+  function removeFeed(id) { if (remote) remote.fs.deleteDoc(remote.fs.doc(remote.feedsCol, id)).catch(syncErr); }
+  async function connect() {
+    try {
+      const { initializeApp } = await import(FB + 'firebase-app.js');
+      const fs = await import(FB + 'firebase-firestore.js');
+      const db = fs.getFirestore(initializeApp(fbConfig));
+      const isNew = !familyId;
+      if (isNew) familyId = newId();
+      store.set(FAMILY_KEY, familyId);
+      try { history.replaceState(null, '', shareUrl()); } catch (e) {}
+      const famRef = fs.doc(db, 'families', familyId);
+      const feedsCol = fs.collection(famRef, 'feeds');
+      remote = { fs, famRef, feedsCol };
+      if (isNew) { // first device: upload what is already logged here
+        if (state.feeds.length) pushSettings();
+        state.feeds.forEach(pushFeed);
+      }
+      fs.onSnapshot(famRef, (snap) => {
+        const d = snap.data();
+        if (d) {
+          if (d.name) state.name = d.name;
+          if (d.intervalMin >= 15) state.intervalMin = d.intervalMin;
+          if (d.snoozeMin) state.snoozeMin = d.snoozeMin;
+          state.snoozeUntil = d.snoozeUntil || null;
+        }
+        syncState = snap.metadata.fromCache ? 'offline' : 'live';
+        saveLocal(); render();
+      }, syncErr);
+      fs.onSnapshot(feedsCol, { includeMetadataChanges: true }, (q) => {
+        state.feeds = q.docs.map((d) => ({ id: d.id, time: d.data().time, oz: d.data().oz }));
+        syncState = q.metadata.fromCache ? 'offline' : 'live';
+        saveLocal(); render();
+      }, syncErr);
+    } catch (e) { syncErr(); }
+  }
 
   const sortedFeeds = () => [...state.feeds].sort((a, b) => b.time - a.time);
   const lastFeed = () => sortedFeeds()[0] || null;
@@ -366,9 +432,10 @@ input, select {
 
   // ---------- actions ----------
   function addFeed(time, amount) {
-    state.feeds.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), time, oz: amount });
+    const f = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), time, oz: amount };
+    state.feeds.push(f);
     state.snoozeUntil = null; state.alertedFor = null;
-    save(); render();
+    pushFeed(f); save(); render();
   }
   function snooze() {
     state.snoozeUntil = Date.now() + state.snoozeMin * MIN;
@@ -409,8 +476,8 @@ input, select {
     if (!(a >= 0) || a > 16) { err.textContent = 'Enter the amount in ounces, between 0 and 16.'; err.hidden = false; return; }
     if (editingId) {
       const f = state.feeds.find((x) => x.id === editingId);
-      if (f) { f.time = t; f.oz = a; }
-      state.alertedFor = null; save(); render();
+      if (f) { f.time = t; f.oz = a; pushFeed(f); }
+      state.alertedFor = null; saveLocal(); render();
     } else addFeed(t, a);
     closeFeed();
   });
@@ -438,6 +505,9 @@ input, select {
     fillInterval($('set-hours'), $('set-mins'), state.intervalMin);
     $('set-snooze').value = String(state.snoozeMin);
     $('set-sound').value = state.sound;
+    $('share-zone').hidden = !remote;
+    $('share-note').textContent = '';
+    $('reset-note').textContent = remote ? 'Clears every logged feed for everyone sharing this log.' : 'Clears every logged feed on this device.';
     resetIdle();
     $('settings').hidden = false;
   });
@@ -457,8 +527,27 @@ input, select {
   function resetIdle() { $('reset-zone').innerHTML = '<button type="button" class="small" id="btn-reset">Clear all data</button>'; $('btn-reset').onclick = resetAsk; }
   function resetAsk() {
     $('reset-zone').innerHTML = '<div class="confirm-del"><span class="note">Delete every feed?</span><button type="button" class="small due" id="btn-reset-yes">Delete all</button><button type="button" class="small" id="btn-reset-no">Keep</button></div>';
-    $('btn-reset-yes').onclick = () => { state = blank(); save(); closeSettings(); render(); };
+    $('btn-reset-yes').onclick = () => {
+      state.feeds.forEach((f) => removeFeed(f.id));
+      const sound = state.sound; state = blank(); state.sound = sound;
+      save(); closeSettings(); render();
+    };
     $('btn-reset-no').onclick = resetIdle;
+  }
+
+  $('btn-share').addEventListener('click', async () => {
+    const url = shareUrl();
+    try {
+      if (navigator.share) { await navigator.share({ title: `${state.name}'s feeds`, url }); return; }
+      await navigator.clipboard.writeText(url); $('share-note').textContent = 'Link copied.';
+    } catch (e) { $('share-note').textContent = url; }
+  });
+  function renderSync() {
+    const el = $('sync-note');
+    el.hidden = syncState === 'off';
+    el.className = syncState === 'live' ? 'note ok' : 'note';
+    el.textContent = { connecting: 'Connecting to the family log...', live: 'Shared with family. Feeds logged on any phone show up here.',
+      offline: 'Offline. Feeds you log now will sync when you are back online.', error: 'Can\'t reach the family log right now. Feeds are saved on this phone.' }[syncState] || '';
   }
 
   // ---------- alert buttons ----------
@@ -489,7 +578,7 @@ input, select {
         if (pendingDelete === f.id) {
           row.innerHTML = `<span class="t num"></span><span class="num"></span><span class="note">Delete this feed?</span><span class="acts"><button type="button" class="small due">Delete</button><button type="button" class="small">Keep</button></span>`;
           const [del, keep] = row.querySelectorAll('button');
-          del.onclick = () => { state.feeds = state.feeds.filter((x) => x.id !== f.id); pendingDelete = null; state.alertedFor = null; save(); render(); };
+          del.onclick = () => { state.feeds = state.feeds.filter((x) => x.id !== f.id); removeFeed(f.id); pendingDelete = null; state.alertedFor = null; saveLocal(); render(); };
           keep.onclick = () => { pendingDelete = null; renderLog(); };
         } else {
           row.innerHTML = `<span class="t num"></span><span class="num"></span><span class="gap num"></span><span class="acts"><button type="button" class="ghost small">Edit</button><button type="button" class="ghost small">Delete</button></span>`;
@@ -543,13 +632,14 @@ input, select {
     $('title').textContent = `${state.name}'s feeds`;
     $('subtitle').textContent = has ? `Every ${dur(state.intervalMin * MIN)} · snooze ${state.snoozeMin} min` : 'Bottle log and next-feed reminder';
     if (!has) { $('alert').hidden = true; return; }
-    renderLog(); renderNotif(); tick();
+    renderLog(); renderNotif(); renderSync(); tick();
   }
 
   // Deep links from a notification tap when the app was closed (#fed / #snooze)
   const h = location.hash.replace('#', '');
   render();
   if (h === 'fed' || h === 'snooze') { handleAction(h); try { history.replaceState(null, '', location.pathname); } catch (e) {} }
+  if (fbConfig) connect();
   setInterval(tick, 1000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeFeed(); closeSettings(); } });
