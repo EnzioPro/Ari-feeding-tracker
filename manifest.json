@@ -1,0 +1,12 @@
+{
+  "name": "Ari's Feeding Clock",
+  "short_name": "Feeds",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eef3f8",
+  "theme_color": "#2f4a8a",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
