@@ -201,7 +201,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
       <h1 id="title">Ari's feeds</h1>
       <p class="sub" id="subtitle">Bottle log and next-feed reminder</p>
     </div>
-    <button class="ghost small" id="btn-settings" type="button" hidden>Settings</button>
+    <button class="ghost small" id="btn-settings" type="button">Settings</button>
   </header>
 
   <!-- First run -->
@@ -226,13 +226,14 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
       <p class="err" id="setup-err" hidden></p>
       <button class="primary" type="submit">Start tracking</button>
     </form>
-    <form id="join-form" class="panel" style="background:var(--milk)" novalidate hidden>
+  </section>
+
+    <form id="join-form" class="panel" novalidate hidden>
       <span class="label">Joining your family's log?</span>
       <p class="note">Paste the share link someone sent you.</p>
       <div class="row"><input id="join-link" type="url" placeholder="https://...?family=..." autocomplete="off"><button type="submit" class="small">Join</button></div>
       <p class="err" id="join-err" hidden></p>
     </form>
-  </section>
 
   <!-- Due alert -->
   <section class="alert" id="alert" hidden role="alert">
@@ -355,7 +356,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
   </div>
 </main>
 
-<nav class="tabs" id="tabs" hidden aria-label="Sections">
+<nav class="tabs" id="tabs" aria-label="Sections">
   <div class="tabs-inner">
     <button type="button" data-tab="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Home</button>
     <button type="button" data-tab="feeds"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2h6M10 2v3l-2 3v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V8l-2-3V2M8 12h8"/></svg>Feeds</button>
@@ -990,6 +991,11 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
       $('home-feed-label').textContent = isDue ? 'Feed is due' : 'Next feed in';
       $('home-feed-big').textContent = isDue ? `+${dur(now - due)}` : dur(at - now);
       $('home-feed-sub').textContent = `Last fed ${clock(f.time)} · ${oz(f.oz)} oz`;
+    } else {
+      fc.classList.remove('is-due');
+      $('home-feed-label').textContent = 'Next feed';
+      $('home-feed-big').textContent = '--';
+      $('home-feed-sub').textContent = 'No feeds logged yet';
     }
     const a = activeSleep(); const wake = lastWake();
     $('home-sleep-card').classList.toggle('is-asleep', !!a);
@@ -1083,7 +1089,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
   }
   $('home-feed-card').addEventListener('click', () => setTab('feeds'));
   $('home-sleep-card').addEventListener('click', () => setTab('sleep'));
-  $('home-log-feed').addEventListener('click', () => openFeed(false));
+  $('home-log-feed').addEventListener('click', () => (lastFeed() ? openFeed(false) : setTab('feeds')));
 
   // ---------- tabs ----------
   const TAB_KEY = 'feeding-tracker.tab';
@@ -1124,15 +1130,17 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
   }
   function render() {
     const has = state.feeds.length > 0;
-    $('setup').hidden = has; $('btn-settings').hidden = !has; $('tabs').hidden = !has;
-    ['home', 'feeds', 'sleep'].forEach((t) => { $('view-' + t).hidden = !has || tab !== t; });
+    // Tabs, Home and Sleep work before any feed is logged; only the Feeds tab shows the first-feed form.
+    ['home', 'feeds', 'sleep'].forEach((t) => { $('view-' + t).hidden = tab !== t; });
+    $('setup').hidden = has || tab !== 'feeds'; $('clock').hidden = !has; $('history').hidden = !has;
     document.querySelectorAll('.tabs button').forEach((b) => { if (b.dataset.tab === tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
-    $('title').textContent = !has ? `${state.name}'s feeds` : { home: `${state.name}'s day`, feeds: `${state.name}'s feeds`, sleep: `${state.name}'s sleep` }[tab];
-    $('subtitle').textContent = !has ? 'Bottle log and next-feed reminder'
+    $('title').textContent = { home: `${state.name}'s day`, feeds: `${state.name}'s feeds`, sleep: `${state.name}'s sleep` }[tab];
+    $('subtitle').textContent = tab === 'feeds' && !has ? 'Bottle log and next-feed reminder'
       : tab === 'feeds' ? `Every ${dur(state.intervalMin * MIN)} · snooze ${state.snoozeMin} min`
       : tab === 'sleep' ? 'One tap when asleep, one tap when awake' : 'Feeding and sleep at a glance';
-    if (!has) { $('alert').hidden = true; return; }
-    renderLog(); renderNotif(); renderSync(); renderSleep(); tick();
+    if (!has) $('alert').hidden = true;
+    else { renderLog(); renderNotif(); renderSync(); tick(); }
+    renderSleep();
     if (tab === 'home') { renderHome(); tickHome(); }
   }
 
@@ -1143,7 +1151,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     if (fbConfig && familyId) { pendingAction = h; setTimeout(() => { if (pendingAction) { pendingAction = null; handleAction(h); } }, 6000); } else handleAction(h);
     try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
   }
-  if (fbConfig && (familyId || state.feeds.length)) connect();
+  if (fbConfig && (familyId || state.feeds.length || state.sleeps.length)) connect();
   else if (fbConfig) { syncState = 'off'; $('join-form').hidden = false; }
   $('join-form').addEventListener('submit', (e) => {
     e.preventDefault();
@@ -1155,7 +1163,6 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
   });
   let secs = 0;
   setInterval(() => {
-    if (!state.feeds.length) return;
     tick(); tickSleep(); secs++;
     if (tab === 'home') { tickHome(); if (secs % 60 === 0) renderHome(); }
     if (tab === 'sleep' && secs % 60 === 0) renderSleepLog();
