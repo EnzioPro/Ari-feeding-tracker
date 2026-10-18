@@ -24,3 +24,23 @@ The link (`?family=<id>`) is the only key to the log, so share it only with peop
 ## Data
 Without a Firebase config, feeds stay in each browser's localStorage under `feeding-tracker.v1`.
 With one, feeds live in Firestore under `families/<id>` and a copy is cached on each phone.
+
+## Alexa announcements
+`functions/` holds a Firebase scheduled function that checks the family's next feed every minute and,
+when it's due, has Alexa say "Time to feed Ari..." through [Voice Monkey](https://voicemonkey.io).
+It announces once per due time (snoozes count), and skips anything more than 10 minutes late.
+
+Setup (once, from a computer with Node 20):
+1. Upgrade the Firebase project to the Blaze plan (Cloud Functions require it; this usage stays in the free allowance).
+2. In Voice Monkey, link your Amazon account, create a Speaker device, and copy your API token and the device ID.
+3. Run:
+   ```sh
+   npm install -g firebase-tools
+   firebase login
+   cd functions && npm install && cd ..
+   firebase functions:secrets:set VOICEMONKEY_TOKEN    # paste the Voice Monkey token
+   firebase functions:secrets:set VOICEMONKEY_DEVICE   # paste the speaker device ID
+   firebase functions:secrets:set FEED_FAMILY_ID       # the code after ?family= in your share link
+   firebase deploy --only functions
+   ```
+Run `cd functions && npm test` to test the timing logic.
