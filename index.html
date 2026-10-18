@@ -158,6 +158,12 @@ input, select {
       <p class="err" id="setup-err" hidden></p>
       <button class="primary" type="submit">Start tracking</button>
     </form>
+    <form id="join-form" class="panel" style="background:var(--milk)" novalidate hidden>
+      <span class="label">Joining your family's log?</span>
+      <p class="note">Paste the share link someone sent you.</p>
+      <div class="row"><input id="join-link" type="url" placeholder="https://...?family=..." autocomplete="off"><button type="submit" class="small">Join</button></div>
+      <p class="err" id="join-err" hidden></p>
+    </form>
   </section>
 
   <!-- Due alert -->
@@ -292,13 +298,23 @@ input, select {
     familyId = (fromUrl && /^[a-z0-9]{6,40}$/.test(fromUrl) ? fromUrl : null) || store.get(FAMILY_KEY);
     if (familyId && familyId !== store.get(FAMILY_KEY) && fromUrl) state.feeds = []; // joined someone else's log
   }
+  function pointManifestAtFamily() {
+    const link = document.querySelector('link[rel="manifest"]');
+    if (!link || !familyId) return;
+    const abs = (u) => new URL(u, location.href).toString();
+    const m = { name: "Ari's Feeding Clock", short_name: 'Feeds', id: abs('./'), start_url: shareUrl(), scope: abs('./'), display: 'standalone',
+      background_color: '#eef3f8', theme_color: '#2f4a8a', icons: [{ src: abs('icon.svg'), sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' }] };
+    link.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(m));
+  }
   const shareUrl = () => { const u = new URL(location.href); u.hash = ''; u.search = ''; u.searchParams.set('family', familyId); return u.toString(); };
   const sharedSettings = () => ({ name: state.name, intervalMin: state.intervalMin, snoozeMin: state.snoozeMin, snoozeUntil: state.snoozeUntil || null, updatedAt: Date.now() });
   const syncErr = () => { syncState = 'error'; renderSync(); };
   function pushSettings() { if (remote) remote.fs.setDoc(remote.famRef, sharedSettings(), { merge: true }).catch(syncErr); }
   function pushFeed(f) { if (remote) remote.fs.setDoc(remote.fs.doc(remote.feedsCol, f.id), { time: f.time, oz: f.oz }).catch(syncErr); }
   function removeFeed(id) { if (remote) remote.fs.deleteDoc(remote.fs.doc(remote.feedsCol, id)).catch(syncErr); }
+  let connecting = false;
   async function connect() {
+    connecting = true;
     try {
       const { initializeApp } = await import(FB + 'firebase-app.js');
       const fs = await import(FB + 'firebase-firestore.js');
@@ -307,6 +323,7 @@ input, select {
       if (isNew) familyId = newId();
       store.set(FAMILY_KEY, familyId);
       try { history.replaceState(null, '', shareUrl()); } catch (e) {}
+      pointManifestAtFamily();
       const famRef = fs.doc(db, 'families', familyId);
       const feedsCol = fs.collection(famRef, 'feeds');
       remote = { fs, famRef, feedsCol };
@@ -436,6 +453,7 @@ input, select {
     state.feeds.push(f);
     state.snoozeUntil = null; state.alertedFor = null;
     pushFeed(f); save(); render();
+    if (fbConfig && !remote && !connecting) connect();
   }
   function snooze() {
     state.snoozeUntil = Date.now() + state.snoozeMin * MIN;
@@ -639,7 +657,16 @@ input, select {
   const h = location.hash.replace('#', '');
   render();
   if (h === 'fed' || h === 'snooze') { handleAction(h); try { history.replaceState(null, '', location.pathname); } catch (e) {} }
-  if (fbConfig) connect();
+  if (fbConfig && (familyId || state.feeds.length)) connect();
+  else if (fbConfig) { syncState = 'off'; $('join-form').hidden = false; }
+  $('join-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    let id = null;
+    const v = $('join-link').value.trim();
+    try { id = new URL(v).searchParams.get('family'); } catch (err) { id = v; }
+    if (!id || !/^[a-z0-9]{6,40}$/.test(id)) { $('join-err').textContent = 'That doesn\'t look like a share link. Copy it again from Settings on the other phone.'; $('join-err').hidden = false; return; }
+    familyId = id; $('join-form').hidden = true; syncState = 'connecting'; render(); connect();
+  });
   setInterval(tick, 1000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeFeed(); closeSettings(); } });
