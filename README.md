@@ -44,6 +44,11 @@ Install the free ntfy app, subscribe to the topic shown in Settings (`ari-feeds-
 reminder arrives at the due time with Fed and Snooze buttons. Each new feed, snooze or interval change
 re-books it under the same sequence ID, which replaces the earlier booking.
 
+The same topic also gets a notification right away whenever anyone logs, edits or deletes a feed, sleep or
+diaper, so everyone subscribed hears about it even with the app closed. Each record's id is its sequence ID,
+so adding details replaces that record's notification instead of stacking a second one. Set "Your name on
+this phone" in Settings to have notifications say who logged it.
+
 ## Data
 Without a Firebase config, feeds stay in each browser's localStorage under `feeding-tracker.v1`.
 With one, feeds and sleeps live in Firestore under `families/<id>` (`feeds`, `sleeps` and `diapers` subcollections) and a copy is cached on each phone.

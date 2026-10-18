@@ -537,10 +537,11 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
       <div><button type="button" class="small" id="btn-share">Copy share link</button> <span class="note" id="share-note"></span></div>
     </div>
     <div class="panel" style="background:var(--milk)" id="push-zone" hidden>
-      <span class="label">Reminders when the app is closed</span>
+      <span class="label">Phone notifications, even when the app is closed</span>
       <p class="note">Install the free <strong>ntfy</strong> app (App Store or Google Play), tap <strong>+</strong>, and subscribe to this topic. Keep the server as ntfy.sh.</p>
       <div><code class="num" id="push-topic"></code> <button type="button" class="small" id="btn-push-copy">Copy topic</button> <span class="note" id="push-note"></span></div>
-      <p class="note">Each time someone logs a feed, snoozes or changes the interval, the next reminder is booked for everyone subscribed.</p>
+      <p class="note">Everyone subscribed gets a notification whenever a feed, sleep or diaper is logged, edited or deleted, plus the next-feed reminder when it's due.</p>
+      <label class="field"><span>Your name on this phone (optional, shown in those notifications)</span><input id="set-me" type="text" maxlength="30" autocomplete="off" placeholder="e.g. Mom"></label>
     </div>
     <div class="panel" style="background:var(--milk)">
       <span class="label">Start over</span>
@@ -612,6 +613,16 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     fetch(url, { method: 'POST', body: `Last fed ${clock(f.time)} (${oz(f.oz)} oz). Tap to log the feed.`,
       headers: { At: String(Math.round(at / 1000)), Title: ascii(`Time to feed ${state.name}`), Priority: 'high', Tags: 'baby_bottle',
         Click: `${link}#fed`, Actions: `view, Fed, ${link}#fed; view, Snooze ${state.snoozeMin} min, ${link}#snooze` } }).catch(() => {});
+  }
+  // Every log also goes out right away to everyone subscribed. Each record's id is its ntfy sequence ID,
+  // so adding details or editing replaces that record's notification instead of stacking a new one.
+  // These never touch the next-feed sequence, so the reminder above keeps working as before.
+  const ME_KEY = 'feeding-tracker.me';
+  function announce(id, title, body, tags) {
+    const topic = pushTopic(); if (!topic) return;
+    const me = (store.get(ME_KEY) || '').trim();
+    fetch(`${NTFY}${topic}/${id}`, { method: 'POST', body: me ? `${body.replace(/\.$/, "")} · by ${me}` : body,
+      headers: { Title: ascii(title), Tags: tags, Click: shareUrl() } }).catch(() => {});
   }
   const shareUrl = () => { const u = new URL(location.href); u.hash = ''; u.search = ''; u.searchParams.set('family', familyId); return u.toString(); };
   const sharedSettings = () => ({ name: state.name, intervalMin: state.intervalMin, snoozeMin: state.snoozeMin, snoozeUntil: state.snoozeUntil || null, updatedAt: Date.now() });
@@ -808,6 +819,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     pushFeed(f); save(); render();
     if (fbConfig && !remote && !connecting) connect();
     scheduleReminder();
+    announce(f.id, `${state.name} was fed ${oz(amount)} oz`, `Fed at ${clock(time)}. Next feed due ${clock(time + state.intervalMin * MIN)}.`, 'baby_bottle');
   }
   function snooze() {
     state.snoozeUntil = Date.now() + state.snoozeMin * MIN;
@@ -848,7 +860,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     if (!(a >= 0) || a > 16) { err.textContent = 'Enter the amount in ounces, between 0 and 16.'; err.hidden = false; return; }
     if (editingId) {
       const f = state.feeds.find((x) => x.id === editingId);
-      if (f) { f.time = t; f.oz = a; pushFeed(f); }
+      if (f) { f.time = t; f.oz = a; pushFeed(f); announce(f.id, 'Feed updated', `${oz(a)} oz at ${clock(t)}`, 'baby_bottle,pencil2'); }
       state.alertedFor = null; saveLocal(); render(); scheduleReminder();
     } else addFeed(t, a);
     closeFeed();
@@ -880,6 +892,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     $('share-zone').hidden = !remote;
     $('push-zone').hidden = !remote;
     $('push-topic').textContent = pushTopic() || '';
+    $('set-me').value = store.get(ME_KEY) || '';
     $('push-note').textContent = '';
     $('share-note').textContent = '';
     $('reset-note').textContent = remote ? 'Clears every logged feed, sleep and diaper for everyone sharing this log.' : 'Clears every logged feed, sleep and diaper on this device.';
@@ -896,6 +909,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     state.name = $('set-name').value.trim() || state.name;
     state.snoozeMin = Number($('set-snooze').value);
     state.sound = $('set-sound').value;
+    store.set(ME_KEY, $('set-me').value.trim().slice(0, 30));
     state.alertedFor = null;
     save(); closeSettings(); render(); scheduleReminder();
   });
@@ -958,7 +972,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
         if (pendingDelete === f.id) {
           row.innerHTML = `<span class="t num"></span><span class="num"></span><span class="note">Delete this feed?</span><span class="acts"><button type="button" class="small due">Delete</button><button type="button" class="small">Keep</button></span>`;
           const [del, keep] = row.querySelectorAll('button');
-          del.onclick = () => { state.feeds = state.feeds.filter((x) => x.id !== f.id); removeFeed(f.id); pendingDelete = null; state.alertedFor = null; saveLocal(); render(); scheduleReminder(); };
+          del.onclick = () => { state.feeds = state.feeds.filter((x) => x.id !== f.id); removeFeed(f.id); announce(f.id, 'Feed deleted', `${oz(f.oz)} oz at ${clock(f.time)} was removed from the log.`, 'wastebasket'); pendingDelete = null; state.alertedFor = null; saveLocal(); render(); scheduleReminder(); };
           keep.onclick = () => { pendingDelete = null; renderLog(); };
         } else {
           row.innerHTML = `<span class="t num"></span><span class="num"></span><span class="gap num"></span><span class="acts"><button type="button" class="ghost small">Edit</button><button type="button" class="ghost small">Delete</button></span>`;
@@ -1010,12 +1024,16 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     lastSleepTap = Date.now();
     const sl = { id: makeId(), start: roundToMinute(at), end: null };
     state.sleeps.push(sl); pushSleep(sl); saveLocal(); render();
+    announce(sl.id, `${state.name} fell asleep`, `Asleep since ${clock(sl.start)}.`, 'zzz');
     if (fbConfig && !remote && !connecting) connect();
   }
   function endSleep(at) {
     if (sleepLockLeft()) return;
     lastSleepTap = Date.now();
-    state.sleeps.filter((x) => x.end == null).forEach((x) => { x.end = Math.max(roundToMinute(at), x.start + MIN); pushSleep(x); });
+    state.sleeps.filter((x) => x.end == null).forEach((x) => {
+      x.end = Math.max(roundToMinute(at), x.start + MIN); pushSleep(x);
+      announce(x.id, `${state.name} woke up`, `Slept ${dur(x.end - x.start)} (${clock(x.start)} – ${clock(x.end)}).`, 'sunny');
+    });
     saveLocal(); render();
   }
   const toggleSleep = () => (activeSleep() ? endSleep(Date.now()) : startSleep(Date.now()));
@@ -1076,7 +1094,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
         if (pendingSleepDelete === x.id) {
           row.innerHTML = '<span class="note">Delete this sleep?</span><span class="acts"><button type="button" class="small due">Delete</button><button type="button" class="small">Keep</button></span>';
           const [del, keep] = row.querySelectorAll('button');
-          del.onclick = () => { state.sleeps = state.sleeps.filter((y) => y.id !== x.id); removeSleep(x.id); pendingSleepDelete = null; saveLocal(); render(); };
+          del.onclick = () => { state.sleeps = state.sleeps.filter((y) => y.id !== x.id); removeSleep(x.id); announce(x.id, 'Sleep deleted', `The sleep from ${clock(x.start)} was removed from the log.`, 'wastebasket'); pendingSleepDelete = null; saveLocal(); render(); };
           keep.onclick = () => { pendingSleepDelete = null; renderSleepLog(); };
         } else {
           row.innerHTML = '<span><span class="t num"></span><span class="tag num"></span></span><span class="acts"><button type="button" class="ghost small">Edit</button><button type="button" class="ghost small">Delete</button></span>';
@@ -1127,8 +1145,11 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     const near = !editingSleep && others.find((x) => Math.abs(st - sleepEnd(x, now)) < GUARD || (en != null && Math.abs(x.start - en) < GUARD));
     if (near) return fail(`That's within 5 minutes of the sleep from ${clock(near.start)} to ${near.end == null ? 'now' : clock(near.end)}. Edit that one instead.`);
     let sl = state.sleeps.find((x) => x.id === editingSleep);
+    const isEdit = !!sl;
     if (sl) { sl.start = st; sl.end = en; } else { sl = { id: makeId(), start: st, end: en }; state.sleeps.push(sl); }
     pushSleep(sl); saveLocal(); closeSleep(); render();
+    announce(sl.id, isEdit ? 'Sleep updated' : 'Sleep logged',
+      en == null ? `Asleep since ${clock(st)}.` : `${clock(st)} – ${clock(en)} (${dur(en - st)}).`, isEdit ? 'zzz,pencil2' : 'zzz');
     if (fbConfig && !remote && !connecting) connect();
   });
 
@@ -1145,12 +1166,16 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
   const ago = (ms) => (ms < MIN ? 'just now' : `${dur(ms)} ago`);
   const diaperDesc = (x) => [DKINDS[x.kind] || x.kind, [x.color, x.texture].filter(Boolean).join(', '), x.rash ? 'rash' : '', x.note]
     .filter(Boolean).join(' · ');
+  const DTAGS = { pee: 'sweat_drops', poo: 'poop', both: 'sweat_drops,poop', dry: 'white_check_mark' };
+  const announceDiaper = (x, isEdit) => announce(x.id, isEdit ? 'Diaper updated' : `${state.name} had a diaper change: ${DKINDS[x.kind].toLowerCase()}`,
+    `${diaperDesc(x)} at ${clock(x.time)}.`, isEdit ? `${DTAGS[x.kind]},pencil2` : DTAGS[x.kind]);
   let justLogged = null; let justLoggedTimer = null;
   function logDiaper(kind) {
     if (diaperLockLeft()) return;
     lastDiaperTap = Date.now();
     const x = { id: makeId(), time: roundToMinute(Date.now()), kind, color: '', texture: '', rash: false, note: '' };
     state.diapers.push(x); pushDiaper(x); saveLocal();
+    announceDiaper(x, false);
     justLogged = x.id; clearTimeout(justLoggedTimer);
     justLoggedTimer = setTimeout(() => { justLogged = null; renderDiaper(); }, 2 * MIN);
     render();
@@ -1194,7 +1219,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
         if (pendingDiaperDelete === x.id) {
           row.innerHTML = '<span class="note">Delete this change?</span><span class="acts"><button type="button" class="small due">Delete</button><button type="button" class="small">Keep</button></span>';
           const [del, keep] = row.querySelectorAll('button');
-          del.onclick = () => { state.diapers = state.diapers.filter((y) => y.id !== x.id); removeDiaper(x.id); pendingDiaperDelete = null; saveLocal(); render(); };
+          del.onclick = () => { state.diapers = state.diapers.filter((y) => y.id !== x.id); removeDiaper(x.id); announce(x.id, 'Diaper deleted', `The change at ${clock(x.time)} was removed from the log.`, 'wastebasket'); pendingDiaperDelete = null; saveLocal(); render(); };
           keep.onclick = () => { pendingDiaperDelete = null; renderDiaperLog(); };
         } else {
           row.innerHTML = '<span><span class="t num"></span><span class="tag"></span></span><span class="acts"><button type="button" class="ghost small">Edit</button><button type="button" class="ghost small">Delete</button></span>';
@@ -1259,9 +1284,10 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
       note: $('diaper-note').value.trim().slice(0, 200) };
     const near = !editingDiaper && state.diapers.find((y) => Math.abs(y.time - t) < GUARD);
     if (near) { err.textContent = `There's already a change at ${clock(near.time)}, within 5 minutes of this one. Edit that one instead.`; err.hidden = false; return; }
-    let x = state.diapers.find((y) => y.id === editingDiaper);
+    let x = state.diapers.find((y) => y.id === editingDiaper); const isEdit = !!x;
     if (x) Object.assign(x, fields); else { x = Object.assign({ id: makeId() }, fields); state.diapers.push(x); }
     pushDiaper(x); saveLocal(); closeDiaper(); render();
+    announceDiaper(x, isEdit);
     if (fbConfig && !remote && !connecting) connect();
   });
 
