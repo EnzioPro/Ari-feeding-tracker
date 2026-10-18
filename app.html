@@ -293,12 +293,14 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
           <span class="label" id="home-sleep-label">Awake for</span>
           <span class="big" id="home-sleep-big">--</span>
           <span class="note" id="home-sleep-sub"></span>
+          <span class="note" id="home-sleep-lock" hidden></span>
           <button class="sleep small" id="home-sleep-toggle" type="button">Start sleep</button>
         </div>
         <div class="now-card" id="home-diaper-card" data-show="diapers">
           <span class="label">Last diaper</span>
           <span class="big" id="home-diaper-big">--</span>
           <span class="note" id="home-diaper-sub"></span>
+          <span class="note" id="home-diaper-lock" hidden></span>
           <div class="dbtns">
             <button class="diaper small" type="button" data-log="pee">Pee</button>
             <button class="diaper small" type="button" data-log="poo">Poo</button>
@@ -401,6 +403,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
         <div class="chips" id="sleep-ago"></div>
       </div>
       <div><button class="small" id="btn-sleep-add" type="button">Add a past sleep</button></div>
+      <p class="note" id="sleep-lock-note" hidden></p>
       <p class="note" id="sleep-sync-note" hidden></p>
     </section>
     <section class="panel">
@@ -426,6 +429,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
       </div>
       <div class="logged" id="diaper-logged" hidden><span class="note ok" id="diaper-logged-text"></span><button class="small" id="btn-diaper-details" type="button">Add details</button></div>
       <div><button class="small" id="btn-diaper-add" type="button">Add an earlier change</button></div>
+      <p class="note" id="diaper-lock-note" hidden></p>
       <p class="note" id="diaper-sync-note" hidden></p>
     </section>
     <section class="panel">
@@ -974,13 +978,37 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
   const isNap = (x) => { const h = new Date(x.start).getHours(); return h >= 7 && h < 19; };
   const startOfDay = (ms) => { const d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); };
   const makeId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  // A quick-log button stays locked for 5 minutes after the last log, counting any phone's logs and
+  // taps on this one, so a double tap (or two people tapping) can't log twice.
+  const GUARD = 5 * MIN;
+  let lastSleepTap = 0; let lastDiaperTap = 0;
+  const lockLeft = (times, tap) => {
+    const now = Date.now(); const last = Math.max(tap, ...times.filter((t) => t != null && t <= now + MIN));
+    return Math.max(0, last + GUARD - now);
+  };
+  const sleepLockLeft = () => lockLeft(state.sleeps.flatMap((x) => [x.start, x.end]), lastSleepTap);
+  const diaperLockLeft = () => lockLeft(state.diapers.map((x) => x.time), lastDiaperTap);
+  const unlockIn = (ms) => `${Math.ceil(ms / MIN)} min`;
+  function applyLocks() {
+    const sl = sleepLockLeft(); const dl = diaperLockLeft();
+    $('btn-sleep-toggle').disabled = sl > 0; $('home-sleep-toggle').disabled = sl > 0;
+    $('sleep-ago').querySelectorAll('button').forEach((b) => { b.disabled = sl > 0 || b.dataset.blocked === '1'; });
+    document.querySelectorAll('[data-log]').forEach((b) => { b.disabled = dl > 0; });
+    [['sleep-lock-note', sl, 'Sleep'], ['home-sleep-lock', sl, ''], ['diaper-lock-note', dl, 'Diaper'], ['home-diaper-lock', dl, '']].forEach(([id, ms, what]) => {
+      const el = $(id); el.hidden = !ms;
+      if (ms) el.textContent = what ? `${what} buttons unlock in ${unlockIn(ms)}, so a double tap can't log twice. Use Edit in the log to fix a mistake.` : `Unlocks in ${unlockIn(ms)}`;
+    });
+  }
   function startSleep(at) {
-    if (activeSleep()) return;
+    if (activeSleep() || sleepLockLeft()) return;
+    lastSleepTap = Date.now();
     const sl = { id: makeId(), start: roundToMinute(at), end: null };
     state.sleeps.push(sl); pushSleep(sl); saveLocal(); render();
     if (fbConfig && !remote && !connecting) connect();
   }
   function endSleep(at) {
+    if (sleepLockLeft()) return;
+    lastSleepTap = Date.now();
     state.sleeps.filter((x) => x.end == null).forEach((x) => { x.end = Math.max(roundToMinute(at), x.start + MIN); pushSleep(x); });
     saveLocal(); render();
   }
@@ -1011,8 +1039,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     [5, 10, 15, 30].forEach((m) => {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = `${m} min ago`;
       const at = now - m * MIN;
-      if (a && at <= a.start) b.disabled = true;
-      if (!a && wakeBlocks(at)) b.disabled = true;
+      if ((a && at <= a.start) || (!a && wakeBlocks(at))) b.dataset.blocked = '1';
       b.onclick = () => (activeSleep() ? endSleep(Date.now() - m * MIN) : startSleep(Date.now() - m * MIN));
       chips.appendChild(b);
     });
@@ -1091,6 +1118,8 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     if (en == null && others.some((x) => x.end == null)) return fail('Another sleep is still running. Tap Woke up on that one first.');
     const clash = others.find((x) => st < sleepEnd(x, now) && sleepEnd({ end: en }, now) > x.start);
     if (clash) return fail(`This overlaps the sleep from ${clock(clash.start)} to ${clash.end == null ? 'now' : clock(clash.end)}. Edit that one instead.`);
+    const near = !editingSleep && others.find((x) => Math.abs(st - sleepEnd(x, now)) < GUARD || (en != null && Math.abs(x.start - en) < GUARD));
+    if (near) return fail(`That's within 5 minutes of the sleep from ${clock(near.start)} to ${near.end == null ? 'now' : clock(near.end)}. Edit that one instead.`);
     let sl = state.sleeps.find((x) => x.id === editingSleep);
     if (sl) { sl.start = st; sl.end = en; } else { sl = { id: makeId(), start: st, end: en }; state.sleeps.push(sl); }
     pushSleep(sl); saveLocal(); closeSleep(); render();
@@ -1112,6 +1141,8 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     .filter(Boolean).join(' · ');
   let justLogged = null; let justLoggedTimer = null;
   function logDiaper(kind) {
+    if (diaperLockLeft()) return;
+    lastDiaperTap = Date.now();
     const x = { id: makeId(), time: roundToMinute(Date.now()), kind, color: '', texture: '', rash: false, note: '' };
     state.diapers.push(x); pushDiaper(x); saveLocal();
     justLogged = x.id; clearTimeout(justLoggedTimer);
@@ -1220,6 +1251,8 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     const poo = draft.kind === 'poo' || draft.kind === 'both';
     const fields = { time: t, kind: draft.kind, color: poo ? draft.color : '', texture: poo ? draft.texture : '', rash: !!draft.rash,
       note: $('diaper-note').value.trim().slice(0, 200) };
+    const near = !editingDiaper && state.diapers.find((y) => Math.abs(y.time - t) < GUARD);
+    if (near) { err.textContent = `There's already a change at ${clock(near.time)}, within 5 minutes of this one. Edit that one instead.`; err.hidden = false; return; }
     let x = state.diapers.find((y) => y.id === editingDiaper);
     if (x) Object.assign(x, fields); else { x = Object.assign({ id: makeId() }, fields); state.diapers.push(x); }
     pushDiaper(x); saveLocal(); closeDiaper(); render();
@@ -1421,7 +1454,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
       : tab === 'diaper' ? 'One tap per change, details if you want them' : 'Feeds, sleep and diapers at a glance';
     if (!has) $('alert').hidden = true;
     else { renderLog(); renderNotif(); renderSync(); tick(); }
-    renderSleep(); renderDiaper();
+    renderSleep(); renderDiaper(); applyLocks();
     if (tab === 'home') { renderHome(); tickHome(); }
   }
 
@@ -1444,7 +1477,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
   });
   let secs = 0;
   setInterval(() => {
-    tick(); tickSleep(); tickDiaper(); secs++;
+    tick(); tickSleep(); tickDiaper(); applyLocks(); secs++;
     if (tab === 'home') { tickHome(); if (secs % 60 === 0) renderHome(); }
     if (tab === 'sleep' && secs % 60 === 0) renderSleepLog();
     if (justLogged && secs % 60 === 0) renderDiaper();

@@ -13,6 +13,9 @@ A small installable web app that logs bottle feeds (in oz), reminds you when the
 - **Diapers** – tap Pee, Poo or Both after a change. "Add details" (or Edit in the log) records dry diapers,
   poo color and texture, diaper rash and a note. "Add an earlier change" logs one after the fact.
 
+Sleep and diaper buttons lock for 5 minutes after a log (from any phone), so a double tap can't log twice.
+Mistakes are fixed with Edit or Delete in the log.
+
 ## Files
 - `app.html` – the whole app (HTML, CSS, JS). This is what the published artifact runs.
 - `index.html` – `app.html` wrapped as a full page for self-hosting. Rebuild with `sh build.sh` after editing `app.html`.
