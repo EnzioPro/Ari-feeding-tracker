@@ -246,6 +246,12 @@ input, select {
       <p class="note">Everyone who opens this link sees the same log, countdown and reminders.</p>
       <div><button type="button" class="small" id="btn-share">Copy share link</button> <span class="note" id="share-note"></span></div>
     </div>
+    <div class="panel" style="background:var(--milk)" id="push-zone" hidden>
+      <span class="label">Reminders when the app is closed</span>
+      <p class="note">Install the free <strong>ntfy</strong> app (App Store or Google Play), tap <strong>+</strong>, and subscribe to this topic. Keep the server as ntfy.sh.</p>
+      <div><code class="num" id="push-topic"></code> <button type="button" class="small" id="btn-push-copy">Copy topic</button> <span class="note" id="push-note"></span></div>
+      <p class="note">Each time someone logs a feed, snoozes or changes the interval, the next reminder is booked for everyone subscribed.</p>
+    </div>
     <div class="panel" style="background:var(--milk)">
       <span class="label">Start over</span>
       <p class="note" id="reset-note">Clears every logged feed on this device.</p>
@@ -300,6 +306,22 @@ input, select {
       background_color: '#eef3f8', theme_color: '#2f4a8a', icons: [{ src: abs('icon.svg'), sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' }] };
     link.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(m));
   }
+  // ---------- closed-app reminders (ntfy) ----------
+  // Every local change books the next reminder on ntfy.sh with a fixed sequence ID,
+  // which replaces any reminder booked earlier, so only the latest due time fires.
+  const NTFY = 'https://ntfy.sh/';
+  const pushTopic = () => (familyId ? `ari-feeds-${familyId}` : null);
+  const ascii = (t) => t.replace(/[^\x20-\x7e]/g, '');
+  function scheduleReminder() {
+    const topic = pushTopic(); if (!topic) return;
+    const url = `${NTFY}${topic}/next-feed`;
+    const at = state.feeds.length ? alertTime() : null;
+    if (at == null || at < Date.now() + 15000) { fetch(url, { method: 'DELETE' }).catch(() => {}); return; }
+    const f = lastFeed(); const link = shareUrl();
+    fetch(url, { method: 'POST', body: `Last fed ${clock(f.time)} (${oz(f.oz)} oz). Tap to log the feed.`,
+      headers: { At: String(Math.round(at / 1000)), Title: ascii(`Time to feed ${state.name}`), Priority: 'high', Tags: 'baby_bottle',
+        Click: `${link}#fed`, Actions: `view, Fed, ${link}#fed; view, Snooze ${state.snoozeMin} min, ${link}#snooze` } }).catch(() => {});
+  }
   const shareUrl = () => { const u = new URL(location.href); u.hash = ''; u.search = ''; u.searchParams.set('family', familyId); return u.toString(); };
   const sharedSettings = () => ({ name: state.name, intervalMin: state.intervalMin, snoozeMin: state.snoozeMin, snoozeUntil: state.snoozeUntil || null, updatedAt: Date.now() });
   const syncErr = () => { syncState = 'error'; renderSync(); };
@@ -307,6 +329,7 @@ input, select {
   function pushFeed(f) { if (remote) remote.fs.setDoc(remote.fs.doc(remote.feedsCol, f.id), { time: f.time, oz: f.oz }).catch(syncErr); }
   function removeFeed(id) { if (remote) remote.fs.deleteDoc(remote.fs.doc(remote.feedsCol, id)).catch(syncErr); }
   let connecting = false;
+  let pendingAction = null;
   async function connect() {
     connecting = true;
     try {
@@ -335,6 +358,7 @@ input, select {
         }
         syncState = snap.metadata.fromCache ? 'offline' : 'live';
         saveLocal(); render();
+        if (pendingAction) { const a = pendingAction; pendingAction = null; setTimeout(() => handleAction(a), 300); }
       }, syncErr);
       fs.onSnapshot(feedsCol, { includeMetadataChanges: true }, (q) => {
         state.feeds = q.docs.map((d) => ({ id: d.id, time: d.data().time, oz: d.data().oz }));
@@ -448,11 +472,12 @@ input, select {
     state.snoozeUntil = null; state.alertedFor = null;
     pushFeed(f); save(); render();
     if (fbConfig && !remote && !connecting) connect();
+    scheduleReminder();
   }
   function snooze() {
     state.snoozeUntil = Date.now() + state.snoozeMin * MIN;
     state.alertedFor = null;
-    save(); render();
+    save(); render(); scheduleReminder();
   }
 
   // ---------- feed sheet ----------
@@ -489,7 +514,7 @@ input, select {
     if (editingId) {
       const f = state.feeds.find((x) => x.id === editingId);
       if (f) { f.time = t; f.oz = a; pushFeed(f); }
-      state.alertedFor = null; saveLocal(); render();
+      state.alertedFor = null; saveLocal(); render(); scheduleReminder();
     } else addFeed(t, a);
     closeFeed();
   });
@@ -518,6 +543,9 @@ input, select {
     $('set-snooze').value = String(state.snoozeMin);
     $('set-sound').value = state.sound;
     $('share-zone').hidden = !remote;
+    $('push-zone').hidden = !remote;
+    $('push-topic').textContent = pushTopic() || '';
+    $('push-note').textContent = '';
     $('share-note').textContent = '';
     $('reset-note').textContent = remote ? 'Clears every logged feed for everyone sharing this log.' : 'Clears every logged feed on this device.';
     resetIdle();
@@ -534,7 +562,7 @@ input, select {
     state.snoozeMin = Number($('set-snooze').value);
     state.sound = $('set-sound').value;
     state.alertedFor = null;
-    save(); closeSettings(); render();
+    save(); closeSettings(); render(); scheduleReminder();
   });
   function resetIdle() { $('reset-zone').innerHTML = '<button type="button" class="small" id="btn-reset">Clear all data</button>'; $('btn-reset').onclick = resetAsk; }
   function resetAsk() {
@@ -542,7 +570,7 @@ input, select {
     $('btn-reset-yes').onclick = () => {
       state.feeds.forEach((f) => removeFeed(f.id));
       const sound = state.sound; state = blank(); state.sound = sound;
-      save(); closeSettings(); render();
+      save(); closeSettings(); render(); scheduleReminder();
     };
     $('btn-reset-no').onclick = resetIdle;
   }
@@ -553,6 +581,9 @@ input, select {
       if (navigator.share) { await navigator.share({ title: `${state.name}'s feeds`, url }); return; }
       await navigator.clipboard.writeText(url); $('share-note').textContent = 'Link copied.';
     } catch (e) { $('share-note').textContent = url; }
+  });
+  $('btn-push-copy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(pushTopic()); $('push-note').textContent = 'Copied.'; } catch (e) { $('push-note').textContent = 'Press and hold the topic to copy it.'; }
   });
   function renderSync() {
     const el = $('sync-note');
@@ -590,7 +621,7 @@ input, select {
         if (pendingDelete === f.id) {
           row.innerHTML = `<span class="t num"></span><span class="num"></span><span class="note">Delete this feed?</span><span class="acts"><button type="button" class="small due">Delete</button><button type="button" class="small">Keep</button></span>`;
           const [del, keep] = row.querySelectorAll('button');
-          del.onclick = () => { state.feeds = state.feeds.filter((x) => x.id !== f.id); removeFeed(f.id); pendingDelete = null; state.alertedFor = null; saveLocal(); render(); };
+          del.onclick = () => { state.feeds = state.feeds.filter((x) => x.id !== f.id); removeFeed(f.id); pendingDelete = null; state.alertedFor = null; saveLocal(); render(); scheduleReminder(); };
           keep.onclick = () => { pendingDelete = null; renderLog(); };
         } else {
           row.innerHTML = `<span class="t num"></span><span class="num"></span><span class="gap num"></span><span class="acts"><button type="button" class="ghost small">Edit</button><button type="button" class="ghost small">Delete</button></span>`;
@@ -650,7 +681,10 @@ input, select {
   // Deep links from a notification tap when the app was closed (#fed / #snooze)
   const h = location.hash.replace('#', '');
   render();
-  if (h === 'fed' || h === 'snooze') { handleAction(h); try { history.replaceState(null, '', location.pathname); } catch (e) {} }
+  if (h === 'fed' || h === 'snooze') {
+    if (fbConfig && familyId) { pendingAction = h; setTimeout(() => { if (pendingAction) { pendingAction = null; handleAction(h); } }, 6000); } else handleAction(h);
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+  }
   if (fbConfig && (familyId || state.feeds.length)) connect();
   else if (fbConfig) { syncState = 'off'; $('join-form').hidden = false; }
   $('join-form').addEventListener('submit', (e) => {

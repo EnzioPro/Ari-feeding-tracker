@@ -21,6 +21,12 @@ Reminders fire while the app is open or in the background; browsers can't wake a
 
 The link (`?family=<id>`) is the only key to the log, so share it only with people who should see it.
 
+## Reminders when the app is closed
+Browsers can't wake a closed web app, so the app books each next reminder on [ntfy.sh](https://ntfy.sh).
+Install the free ntfy app, subscribe to the topic shown in Settings (`ari-feeds-<family id>`), and the
+reminder arrives at the due time with Fed and Snooze buttons. Each new feed, snooze or interval change
+re-books it under the same sequence ID, which replaces the earlier booking.
+
 ## Data
 Without a Firebase config, feeds stay in each browser's localStorage under `feeding-tracker.v1`.
 With one, feeds live in Firestore under `families/<id>` and a copy is cached on each phone.
