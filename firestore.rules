@@ -10,6 +10,12 @@ service cloud.firestore {
                               && request.resource.data.oz is number
                               && request.resource.data.oz >= 0 && request.resource.data.oz <= 16;
       }
+      match /sleeps/{sleepId} {
+        allow read, delete: if true;
+        allow create, update: if request.resource.data.start is number
+                              && (request.resource.data.end == null
+                                  || (request.resource.data.end is number && request.resource.data.end > request.resource.data.start));
+      }
     }
   }
 }
