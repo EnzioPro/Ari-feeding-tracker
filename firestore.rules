@@ -16,6 +16,12 @@ service cloud.firestore {
                               && (request.resource.data.end == null
                                   || (request.resource.data.end is number && request.resource.data.end > request.resource.data.start));
       }
+      match /diapers/{diaperId} {
+        allow read, delete: if true;
+        allow create, update: if request.resource.data.time is number
+                              && request.resource.data.kind in ['pee', 'poo', 'both', 'dry']
+                              && request.resource.data.note is string && request.resource.data.note.size() <= 200;
+      }
     }
   }
 }
