@@ -23,6 +23,10 @@
   --sleep-soft: #d9f1ec;
   --feed-mark: #2f5fc4;
   --sleep-mark: #0e8b78;
+  --diaper: #a8650a;
+  --diaper-ink: #ffffff;
+  --diaper-soft: #f7ead5;
+  --diaper-mark: #a8650a;
   --font-display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
   --font-body: "Nunito Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --radius: 14px;
@@ -33,6 +37,7 @@
     --accent: #7ea6ff; --accent-ink: #0f1522; --accent-soft: #233456; --milk: #1d283d;
     --due: #ff9a62; --due-soft: #3a2418; --ok: #5fd39a; color-scheme: dark;
     --sleep: #46c9b1; --sleep-ink: #0f1522; --sleep-soft: #173a3a; --feed-mark: #5a86e6; --sleep-mark: #1f9a85;
+    --diaper: #e0a84f; --diaper-ink: #0f1522; --diaper-soft: #3a2e18; --diaper-mark: #bf8420;
   }
 }
 :root[data-theme="dark"] {
@@ -40,6 +45,7 @@
   --accent: #7ea6ff; --accent-ink: #0f1522; --accent-soft: #233456; --milk: #1d283d;
   --due: #ff9a62; --due-soft: #3a2418; --ok: #5fd39a; color-scheme: dark;
   --sleep: #46c9b1; --sleep-ink: #0f1522; --sleep-soft: #173a3a; --feed-mark: #5a86e6; --sleep-mark: #1f9a85;
+    --diaper: #e0a84f; --diaper-ink: #0f1522; --diaper-soft: #3a2e18; --diaper-mark: #bf8420;
 }
 * { box-sizing: border-box; }
 body {
@@ -62,6 +68,7 @@ button, .btn {
 }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+button.diaper { background: var(--diaper); border-color: var(--diaper); color: var(--diaper-ink); }
 button.sleep { background: var(--sleep); border-color: var(--sleep); color: var(--sleep-ink); }
 button:disabled { opacity: .45; cursor: default; }
 button.due { background: var(--due); border-color: var(--due); color: #fff; }
@@ -139,26 +146,35 @@ input, select {
 .tabs svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 /* Dashboard */
-.now-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-@media (max-width: 340px) { .now-grid { grid-template-columns: 1fr; } }
-.now-card { font-weight: 400; text-align: left; border-radius: 12px; background: var(--milk); padding: 12px 14px; min-width: 0;
+.filters { display: flex; flex-direction: column; gap: 8px; }
+.filter-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.filter-row > .label { min-width: 4.2em; }
+.toggles button[aria-pressed="false"] { background: transparent; border-color: var(--line); color: var(--muted); }
+.toggles button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); }
+.now-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.now-card { flex: 1 1 150px; border: 1px solid var(--line); border-radius: 12px; background: var(--milk); padding: 12px 14px; min-width: 0;
   display: flex; flex-direction: column; gap: 4px; }
+.now-card > button, .now-card .dbtns { margin-top: auto; }
+.now-card .note { margin-bottom: 6px; }
+.dbtns { display: flex; gap: 6px; }
+.dbtns button { flex: 1; padding-inline: 6px; }
 .now-card .big { font-family: var(--font-display); font-size: 1.75rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
 .now-card .note { overflow-wrap: anywhere; }
 .now-card.is-due { background: var(--due-soft); border-color: var(--due); }
 .now-card.is-due .big { color: var(--due); }
 .now-card.is-asleep { background: var(--sleep-soft); border-color: var(--sleep); }
 .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-@media (max-width: 440px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(3, auto); grid-auto-flow: column; } }
-.tile { background: var(--milk); border-radius: 10px; padding: 10px 12px; border-left: 4px solid var(--feed-mark); min-width: 0; }
+.tile { background: var(--milk); border-radius: 10px; padding: 8px 10px; border-left: 4px solid var(--feed-mark); min-width: 0; }
 .tile.s { border-left-color: var(--sleep-mark); }
-.tile .v { font-family: var(--font-display); font-size: 1.35rem; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.tile.d { border-left-color: var(--diaper-mark); }
+.tile .v { white-space: nowrap; font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; }
 .tile .k { font-size: .78rem; color: var(--muted); font-weight: 600; }
 .legend { display: flex; gap: 14px; font-size: .8rem; color: var(--muted); flex-wrap: wrap; }
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
 .tl { position: relative; height: 32px; background: var(--milk); border-radius: 8px; overflow: hidden; }
 .tl .s { position: absolute; top: 5px; bottom: 5px; background: var(--sleep-mark); border-radius: 4px; min-width: 2px; }
-.tl .f { position: absolute; top: 2px; bottom: 2px; width: 4px; margin-left: -2px; background: var(--feed-mark); border-radius: 2px; box-shadow: 0 0 0 2px var(--milk); }
+.tl .p { position: absolute; top: 54%; bottom: 2px; width: 4px; margin-left: -2px; background: var(--diaper-mark); border-radius: 2px; box-shadow: 0 0 0 2px var(--milk); }
+.tl .f { position: absolute; top: 2px; bottom: 54%; width: 4px; margin-left: -2px; background: var(--feed-mark); border-radius: 2px; box-shadow: 0 0 0 2px var(--milk); }
 .tl-axis { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); margin-top: 4px; }
 .chart-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .chart-head .hero { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; }
@@ -171,6 +187,7 @@ input, select {
 .chart .sel { fill: var(--milk); }
 .chart .bar-f { fill: var(--feed-mark); }
 .chart .bar-s { fill: var(--sleep-mark); }
+.chart .bar-d { fill: var(--diaper-mark); }
 .chart .hit { fill: transparent; cursor: pointer; }
 .chart-cap { margin: 4px 0 0; font-size: .85rem; color: var(--muted); min-height: 1.3em; }
 
@@ -187,6 +204,13 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
 .sentry .tag { display: block; color: var(--muted); font-size: .8rem; font-weight: 600; }
 .sentry .acts { display: flex; gap: 2px; }
 .sentry.live .tag { color: var(--sleep); }
+
+/* Diapers */
+.sleep-hero .moon.dia { background: var(--diaper-soft); color: var(--diaper); }
+.dia-btns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.dia-btns button { min-height: 64px; font-size: 1.1rem; }
+.logged { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .25); }
 </style>
 
 <main id="app">
@@ -241,55 +265,91 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
 
   <!-- Home dashboard -->
   <div id="view-home" class="view" hidden>
+    <div class="filters" aria-label="Choose what the dashboard shows">
+      <div class="filter-row"><span class="label">Show</span>
+        <div class="chips toggles" id="dash-kinds">
+          <button type="button" data-kind="feeds">Feeds</button>
+          <button type="button" data-kind="sleep">Sleep</button>
+          <button type="button" data-kind="diapers">Diapers</button>
+        </div>
+      </div>
+      <div class="filter-row"><span class="label">Charts</span>
+        <div class="chips toggles" id="dash-days">
+          <button type="button" data-days="7">7 days</button>
+          <button type="button" data-days="14">14 days</button>
+        </div>
+      </div>
+    </div>
+
     <section class="panel">
       <div class="now-grid">
-        <button type="button" class="now-card" id="home-feed-card">
+        <div class="now-card" id="home-feed-card" data-show="feeds">
           <span class="label" id="home-feed-label">Next feed in</span>
           <span class="big" id="home-feed-big">--</span>
           <span class="note" id="home-feed-sub"></span>
-        </button>
-        <button type="button" class="now-card" id="home-sleep-card">
+          <button class="primary small" id="home-log-feed" type="button">Log a feed</button>
+        </div>
+        <div class="now-card" id="home-sleep-card" data-show="sleep">
           <span class="label" id="home-sleep-label">Awake for</span>
           <span class="big" id="home-sleep-big">--</span>
           <span class="note" id="home-sleep-sub"></span>
-        </button>
-      </div>
-      <div class="row">
-        <button class="primary" id="home-log-feed" type="button">Log a feed</button>
-        <button class="sleep" id="home-sleep-toggle" type="button">Start sleep</button>
+          <button class="sleep small" id="home-sleep-toggle" type="button">Start sleep</button>
+        </div>
+        <div class="now-card" id="home-diaper-card" data-show="diapers">
+          <span class="label">Last diaper</span>
+          <span class="big" id="home-diaper-big">--</span>
+          <span class="note" id="home-diaper-sub"></span>
+          <div class="dbtns">
+            <button class="diaper small" type="button" data-log="pee">Pee</button>
+            <button class="diaper small" type="button" data-log="poo">Poo</button>
+            <button class="diaper small" type="button" data-log="both">Both</button>
+          </div>
+        </div>
       </div>
     </section>
 
     <section class="panel">
       <div class="top"><h2>Today</h2><span class="sub" id="home-date"></span></div>
-      <div class="tiles">
+      <div class="tiles" data-show="feeds">
         <div class="tile"><div class="v num" id="st-oz">0</div><div class="k">oz today</div></div>
         <div class="tile"><div class="v num" id="st-feeds">0</div><div class="k">feeds today</div></div>
         <div class="tile"><div class="v num" id="st-gap">--</div><div class="k">avg between feeds</div></div>
+      </div>
+      <div class="tiles" data-show="sleep">
         <div class="tile s"><div class="v num" id="st-sleep">0m</div><div class="k">sleep, last 24h</div></div>
         <div class="tile s"><div class="v num" id="st-naps">0</div><div class="k">naps today</div></div>
         <div class="tile s"><div class="v num" id="st-longest">--</div><div class="k">longest sleep, 24h</div></div>
       </div>
+      <div class="tiles" data-show="diapers">
+        <div class="tile d"><div class="v num" id="st-dia">0</div><div class="k">diapers today</div></div>
+        <div class="tile d"><div class="v num" id="st-pee">0</div><div class="k">with pee</div></div>
+        <div class="tile d"><div class="v num" id="st-poo">0</div><div class="k">with poo</div></div>
+      </div>
       <div>
         <div class="chart-head"><span class="label">Last 24 hours</span>
-          <span class="legend"><span><i style="background:var(--sleep-mark)"></i>Sleep</span><span><i style="background:var(--feed-mark)"></i>Feed</span></span></div>
-        <div class="tl" id="timeline" role="img" aria-label="Sleep and feeds over the last 24 hours" style="margin-top:6px"></div>
+          <span class="legend"><span data-show="sleep"><i style="background:var(--sleep-mark)"></i>Sleep</span><span data-show="feeds"><i style="background:var(--feed-mark)"></i>Feed (top)</span><span data-show="diapers"><i style="background:var(--diaper-mark)"></i>Diaper (bottom)</span></span></div>
+        <div class="tl" id="timeline" role="img" aria-label="The last 24 hours" style="margin-top:6px"></div>
         <div class="tl-axis" id="timeline-axis"></div>
         <p class="chart-cap" id="timeline-cap"></p>
       </div>
     </section>
 
     <section class="panel">
-      <h2>Last 7 days</h2>
-      <div class="chart">
+      <h2 id="wk-title">Last 7 days</h2>
+      <div class="chart" data-show="feeds">
         <div class="chart-head"><span class="label">Milk per day</span><span class="hero num" id="wk-oz-hero"></span></div>
         <div id="wk-oz"></div>
         <p class="chart-cap" id="wk-oz-cap"></p>
       </div>
-      <div class="chart">
+      <div class="chart" data-show="sleep">
         <div class="chart-head"><span class="label">Sleep per day</span><span class="hero num" id="wk-sleep-hero"></span></div>
         <div id="wk-sleep"></div>
         <p class="chart-cap" id="wk-sleep-cap"></p>
+      </div>
+      <div class="chart" data-show="diapers">
+        <div class="chart-head"><span class="label">Diapers per day</span><span class="hero num" id="wk-dia-hero"></span></div>
+        <div id="wk-dia"></div>
+        <p class="chart-cap" id="wk-dia-cap"></p>
       </div>
     </section>
   </div>
@@ -348,6 +408,31 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
       <div id="sleep-log"></div>
     </section>
   </div>
+
+  <!-- Diapers -->
+  <div id="view-diaper" class="view" hidden>
+    <section class="panel">
+      <div class="sleep-hero">
+        <div class="moon dia" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6h18v4a9 9 0 0 1-18 0zM8 6v3a4 4 0 0 0 8 0V6"/></svg></div>
+        <div class="label">Last change</div>
+        <div class="countdown" id="diaper-ago">--</div>
+        <p class="sub" id="diaper-last"></p>
+      </div>
+      <span class="label">Tap to log a change now</span>
+      <div class="dia-btns">
+        <button class="diaper" type="button" data-log="pee">Pee</button>
+        <button class="diaper" type="button" data-log="poo">Poo</button>
+        <button class="diaper" type="button" data-log="both">Both</button>
+      </div>
+      <div class="logged" id="diaper-logged" hidden><span class="note ok" id="diaper-logged-text"></span><button class="small" id="btn-diaper-details" type="button">Add details</button></div>
+      <div><button class="small" id="btn-diaper-add" type="button">Add an earlier change</button></div>
+      <p class="note" id="diaper-sync-note" hidden></p>
+    </section>
+    <section class="panel">
+      <div class="top"><h2>Diaper log</h2><span class="sub" id="diaper-count"></span></div>
+      <div id="diaper-log"></div>
+    </section>
+  </div>
 </main>
 
 <nav class="tabs" id="tabs" aria-label="Sections">
@@ -355,8 +440,30 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     <button type="button" data-tab="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Home</button>
     <button type="button" data-tab="feeds"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2h6M10 2v3l-2 3v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V8l-2-3V2M8 12h8"/></svg>Feeds</button>
     <button type="button" data-tab="sleep"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>Sleep</button>
+    <button type="button" data-tab="diaper"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v4a9 9 0 0 1-18 0zM8 6v3a4 4 0 0 0 8 0V6"/></svg>Diapers</button>
   </div>
 </nav>
+
+<!-- Diaper sheet -->
+<div class="scrim" id="diaper-sheet" hidden>
+  <form class="sheet" id="diaper-form" novalidate aria-labelledby="diaper-sheet-title">
+    <h2 id="diaper-sheet-title">Diaper details</h2>
+    <label class="field"><span>Changed at</span><input id="diaper-time" type="datetime-local" required></label>
+    <div class="field"><span>What was in it</span><div class="chips toggles" id="diaper-kind"></div></div>
+    <div id="poo-details" class="field" style="gap:12px">
+      <div class="field"><span>Poo color</span><div class="chips toggles" id="diaper-color"></div></div>
+      <div class="field"><span>Texture</span><div class="chips toggles" id="diaper-texture"></div></div>
+      <p class="note" id="color-hint" hidden>Red, black or white poo after the first few days is worth mentioning to your pediatrician.</p>
+    </div>
+    <div class="chips toggles"><button type="button" id="diaper-rash" aria-pressed="false">Diaper rash</button></div>
+    <label class="field"><span>Notes (optional)</span><input id="diaper-note" type="text" maxlength="200" placeholder="e.g. leaked, used cream" autocomplete="off"></label>
+    <p class="err" id="diaper-err" hidden></p>
+    <div class="sheet-actions">
+      <button type="button" id="btn-diaper-cancel">Cancel</button>
+      <button class="primary" type="submit" id="btn-diaper-save">Save</button>
+    </div>
+  </form>
+</div>
 
 <!-- Sleep sheet -->
 <div class="scrim" id="sleep-sheet" hidden>
@@ -427,7 +534,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     </div>
     <div class="panel" style="background:var(--milk)">
       <span class="label">Start over</span>
-      <p class="note" id="reset-note">Clears every logged feed and sleep on this device.</p>
+      <p class="note" id="reset-note">Clears every logged feed, sleep and diaper on this device.</p>
       <div id="reset-zone"><button type="button" class="small" id="btn-reset">Clear all data</button></div>
     </div>
     <div class="sheet-actions">
@@ -445,7 +552,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
   const $ = (id) => document.getElementById(id);
 
   // ---------- state ----------
-  const blank = () => ({ name: 'Ari', intervalMin: 180, snoozeMin: 15, sound: 'on', feeds: [], snoozeUntil: null, alertedFor: null, sleeps: [], sleepUnsynced: [] });
+  const blank = () => ({ name: 'Ari', intervalMin: 180, snoozeMin: 15, sound: 'on', feeds: [], snoozeUntil: null, alertedFor: null, sleeps: [], sleepUnsynced: [], diapers: [], diaperUnsynced: [] });
   let state = blank();
   let memoryOnly = false;
   try {
@@ -470,7 +577,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
   if (fbConfig) {
     const fromUrl = new URLSearchParams(location.search).get('family');
     familyId = (fromUrl && /^[a-z0-9]{6,40}$/.test(fromUrl) ? fromUrl : null) || store.get(FAMILY_KEY);
-    if (familyId && familyId !== store.get(FAMILY_KEY) && fromUrl) { state.feeds = []; state.sleeps = []; state.sleepUnsynced = []; } // joined someone else's log
+    if (familyId && familyId !== store.get(FAMILY_KEY) && fromUrl) { state.feeds = []; state.sleeps = []; state.sleepUnsynced = []; state.diapers = []; state.diaperUnsynced = []; } // joined someone else's log
   }
   function pointManifestAtFamily() {
     const link = document.querySelector('link[rel="manifest"]');
@@ -502,26 +609,39 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
   function pushSettings() { if (remote) remote.fs.setDoc(remote.famRef, sharedSettings(), { merge: true }).catch(syncErr); }
   function pushFeed(f) { if (remote) remote.fs.setDoc(remote.fs.doc(remote.feedsCol, f.id), { time: f.time, oz: f.oz }).catch(syncErr); }
   function removeFeed(id) { if (remote) remote.fs.deleteDoc(remote.fs.doc(remote.feedsCol, id)).catch(syncErr); }
-  // Sleeps live in families/{id}/sleeps/{sleepId} as { start, end } (end is null while asleep).
-  // A sleep stays in sleepUnsynced until the server confirms it, so one logged offline, or before
-  // the Firestore rules allowed sleeps, is kept on this phone and uploaded on the next connection.
-  let sleepSync = 'ok';
-  const sleepErr = () => { sleepSync = 'error'; renderSleepSync(); };
-  const markSleep = (id, pending) => {
-    state.sleepUnsynced = state.sleepUnsynced.filter((x) => x !== id);
-    if (pending) state.sleepUnsynced.push(id);
+  // Sleeps (families/{id}/sleeps: { start, end }, end is null while asleep) and diapers
+  // (families/{id}/diapers: { time, kind, color, texture, rash, note }) sync the same way.
+  // A record stays in its *Unsynced list until the server confirms it, so one logged offline, or
+  // before the Firestore rules allowed it, is kept on this phone and uploaded on the next connection.
+  const RECS = {
+    sleeps: { pending: 'sleepUnsynced', toDoc: (x) => ({ start: x.start, end: x.end == null ? null : x.end }),
+      fromDoc: (id, d) => ({ id, start: d.start, end: d.end == null ? null : d.end }) },
+    diapers: { pending: 'diaperUnsynced',
+      toDoc: (x) => ({ time: x.time, kind: x.kind, color: x.color || '', texture: x.texture || '', rash: !!x.rash, note: x.note || '' }),
+      fromDoc: (id, d) => ({ id, time: d.time, kind: d.kind, color: d.color || '', texture: d.texture || '', rash: !!d.rash, note: d.note || '' }) },
   };
-  function pushSleep(sl) {
-    markSleep(sl.id, true);
+  const recSync = { sleeps: 'ok', diapers: 'ok' };
+  const recErr = (col) => () => { recSync[col] = 'error'; renderRecSync(); };
+  const markRec = (col, id, pending) => {
+    const k = RECS[col].pending;
+    state[k] = state[k].filter((x) => x !== id);
+    if (pending) state[k].push(id);
+  };
+  function pushRec(col, x) {
+    markRec(col, x.id, true);
     if (!remote) return;
-    remote.fs.setDoc(remote.fs.doc(remote.sleepsCol, sl.id), { start: sl.start, end: sl.end == null ? null : sl.end })
-      .then(() => { markSleep(sl.id, false); saveLocal(); if (sleepSync === 'error') { sleepSync = 'ok'; renderSleepSync(); } })
-      .catch(sleepErr);
+    remote.fs.setDoc(remote.fs.doc(remote.cols[col], x.id), RECS[col].toDoc(x))
+      .then(() => { markRec(col, x.id, false); saveLocal(); if (recSync[col] === 'error') { recSync[col] = 'ok'; renderRecSync(); } })
+      .catch(recErr(col));
   }
-  function removeSleep(id) {
-    markSleep(id, false);
-    if (remote) remote.fs.deleteDoc(remote.fs.doc(remote.sleepsCol, id)).catch(sleepErr);
+  function removeRec(col, id) {
+    markRec(col, id, false);
+    if (remote) remote.fs.deleteDoc(remote.fs.doc(remote.cols[col], id)).catch(recErr(col));
   }
+  const pushSleep = (x) => pushRec('sleeps', x);
+  const removeSleep = (id) => removeRec('sleeps', id);
+  const pushDiaper = (x) => pushRec('diapers', x);
+  const removeDiaper = (id) => removeRec('diapers', id);
   let connecting = false;
   let pendingAction = null;
   async function connect() {
@@ -537,12 +657,11 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
       pointManifestAtFamily();
       const famRef = fs.doc(db, 'families', familyId);
       const feedsCol = fs.collection(famRef, 'feeds');
-      const sleepsCol = fs.collection(famRef, 'sleeps');
-      remote = { fs, famRef, feedsCol, sleepsCol };
+      remote = { fs, famRef, feedsCol, cols: { sleeps: fs.collection(famRef, 'sleeps'), diapers: fs.collection(famRef, 'diapers') } };
       if (isNew) { // first device: upload what is already logged here
         if (state.feeds.length) pushSettings();
         state.feeds.forEach(pushFeed);
-        state.sleeps.forEach(pushSleep);
+        Object.keys(RECS).forEach((col) => state[col].forEach((x) => pushRec(col, x)));
       }
       fs.onSnapshot(famRef, (snap) => {
         const d = snap.data();
@@ -561,16 +680,16 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
         syncState = q.metadata.fromCache ? 'offline' : 'live';
         saveLocal(); render();
       }, syncErr);
-      let resent = false;
-      fs.onSnapshot(sleepsCol, (q) => {
-        const pending = state.sleeps.filter((x) => state.sleepUnsynced.includes(x.id));
-        const fromServer = q.docs.filter((d) => !state.sleepUnsynced.includes(d.id))
-          .map((d) => ({ id: d.id, start: d.data().start, end: d.data().end == null ? null : d.data().end }));
-        state.sleeps = fromServer.concat(pending);
-        if (sleepSync === 'error') sleepSync = 'ok';
-        saveLocal(); render();
-        if (!resent) { resent = true; pending.forEach(pushSleep); }
-      }, sleepErr);
+      Object.keys(RECS).forEach((col) => {
+        const k = RECS[col].pending; let resent = false;
+        fs.onSnapshot(remote.cols[col], (q) => {
+          const pending = state[col].filter((x) => state[k].includes(x.id));
+          state[col] = q.docs.filter((d) => !state[k].includes(d.id)).map((d) => RECS[col].fromDoc(d.id, d.data())).concat(pending);
+          if (recSync[col] === 'error') recSync[col] = 'ok';
+          saveLocal(); render();
+          if (!resent) { resent = true; pending.forEach((x) => pushRec(col, x)); }
+        }, recErr(col));
+      });
     } catch (e) { syncErr(); }
   }
 
@@ -753,7 +872,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     $('push-topic').textContent = pushTopic() || '';
     $('push-note').textContent = '';
     $('share-note').textContent = '';
-    $('reset-note').textContent = remote ? 'Clears every logged feed and sleep for everyone sharing this log.' : 'Clears every logged feed and sleep on this device.';
+    $('reset-note').textContent = remote ? 'Clears every logged feed, sleep and diaper for everyone sharing this log.' : 'Clears every logged feed, sleep and diaper on this device.';
     resetIdle();
     $('settings').hidden = false;
   });
@@ -772,10 +891,11 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
   });
   function resetIdle() { $('reset-zone').innerHTML = '<button type="button" class="small" id="btn-reset">Clear all data</button>'; $('btn-reset').onclick = resetAsk; }
   function resetAsk() {
-    $('reset-zone').innerHTML = '<div class="confirm-del"><span class="note">Delete every feed and sleep?</span><button type="button" class="small due" id="btn-reset-yes">Delete all</button><button type="button" class="small" id="btn-reset-no">Keep</button></div>';
+    $('reset-zone').innerHTML = '<div class="confirm-del"><span class="note">Delete every feed, sleep and diaper?</span><button type="button" class="small due" id="btn-reset-yes">Delete all</button><button type="button" class="small" id="btn-reset-no">Keep</button></div>';
     $('btn-reset-yes').onclick = () => {
       state.feeds.forEach((f) => removeFeed(f.id));
       state.sleeps.forEach((x) => removeSleep(x.id));
+      state.diapers.forEach((x) => removeDiaper(x.id));
       const sound = state.sound; state = blank(); state.sound = sound;
       save(); closeSettings(); render(); scheduleReminder();
     };
@@ -868,10 +988,12 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
   $('btn-sleep-toggle').addEventListener('click', toggleSleep);
   $('home-sleep-toggle').addEventListener('click', toggleSleep);
 
-  function renderSleepSync() {
-    const el = $('sleep-sync-note');
-    if (sleepSync === 'error') { el.hidden = false; el.className = 'note'; el.textContent = 'Sleeps are saved on this phone but aren\'t reaching the family log yet. They will upload once it accepts them.'; return; }
-    el.hidden = syncState !== 'live'; el.className = 'note ok'; el.textContent = 'Shared with family. Sleeps logged on any phone show up here.';
+  function renderRecSync() {
+    [['sleeps', 'sleep-sync-note', 'Sleeps'], ['diapers', 'diaper-sync-note', 'Diaper changes']].forEach(([col, id, what]) => {
+      const el = $(id);
+      if (recSync[col] === 'error') { el.hidden = false; el.className = 'note'; el.textContent = `${what} are saved on this phone but aren't reaching the family log yet. They will upload once it accepts them.`; return; }
+      el.hidden = syncState !== 'live'; el.className = 'note ok'; el.textContent = `Shared with family. ${what} logged on any phone show up here.`;
+    });
   }
   function tickSleep() {
     const now = Date.now(); const a = activeSleep(); const wake = lastWake();
@@ -894,7 +1016,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
       b.onclick = () => (activeSleep() ? endSleep(Date.now() - m * MIN) : startSleep(Date.now() - m * MIN));
       chips.appendChild(b);
     });
-    tickSleep(); renderSleepSync(); renderSleepLog();
+    tickSleep(); renderRecSync(); renderSleepLog();
   }
   // A new sleep can't start before the last one ended.
   const wakeBlocks = (at) => { const w = lastWake(); return w != null && at < w; };
@@ -975,7 +1097,156 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     if (fbConfig && !remote && !connecting) connect();
   });
 
+  // ---------- diapers ----------
+  const DKINDS = { pee: 'Pee', poo: 'Poo', both: 'Pee + poo', dry: 'Dry' };
+  const COLORS = [['yellow', 'Yellow', '#e3b327'], ['green', 'Green', '#6f8f2a'], ['brown', 'Brown', '#8a5a2b'],
+    ['black', 'Black', '#222222'], ['red', 'Red', '#c0392b'], ['white', 'White', '#f2efe6']];
+  const TEXTURES = ['runny', 'seedy', 'soft', 'formed', 'hard'];
+  const hasPee = (x) => x.kind === 'pee' || x.kind === 'both';
+  const hasPoo = (x) => x.kind === 'poo' || x.kind === 'both';
+  const sortedDiapers = () => [...state.diapers].sort((a, b) => b.time - a.time);
+  const lastDiaper = () => sortedDiapers()[0] || null;
+  const lastPoo = () => sortedDiapers().find(hasPoo) || null;
+  const ago = (ms) => (ms < MIN ? 'just now' : `${dur(ms)} ago`);
+  const diaperDesc = (x) => [DKINDS[x.kind] || x.kind, [x.color, x.texture].filter(Boolean).join(', '), x.rash ? 'rash' : '', x.note]
+    .filter(Boolean).join(' · ');
+  let justLogged = null; let justLoggedTimer = null;
+  function logDiaper(kind) {
+    const x = { id: makeId(), time: roundToMinute(Date.now()), kind, color: '', texture: '', rash: false, note: '' };
+    state.diapers.push(x); pushDiaper(x); saveLocal();
+    justLogged = x.id; clearTimeout(justLoggedTimer);
+    justLoggedTimer = setTimeout(() => { justLogged = null; renderDiaper(); }, 2 * MIN);
+    render();
+    if (fbConfig && !remote && !connecting) connect();
+  }
+  document.querySelectorAll('[data-log]').forEach((b) => b.addEventListener('click', () => logDiaper(b.dataset.log)));
+  function tickDiaper() {
+    const x = lastDiaper(); const lp = lastPoo(); const now = Date.now();
+    $('diaper-ago').textContent = x ? ago(now - x.time) : '--';
+    $('diaper-last').textContent = x ? `${DKINDS[x.kind]} at ${clock(x.time)}${lp && lp !== x ? ` · last poo ${ago(now - lp.time)}` : ''}`
+      : 'Tap Pee, Poo or Both after each change.';
+  }
+  function renderDiaper() {
+    const j = state.diapers.find((x) => x.id === justLogged);
+    $('diaper-logged').hidden = !j;
+    if (j) $('diaper-logged-text').textContent = `Logged ${DKINDS[j.kind].toLowerCase()} at ${clock(j.time)}.`;
+    tickDiaper(); renderRecSync(); renderDiaperLog();
+  }
+  $('btn-diaper-details').addEventListener('click', () => { const j = state.diapers.find((x) => x.id === justLogged); if (j) openDiaper(j); });
+  $('btn-diaper-add').addEventListener('click', () => openDiaper(null));
+
+  let pendingDiaperDelete = null;
+  function renderDiaperLog() {
+    const list = sortedDiapers(); const log = $('diaper-log');
+    $('diaper-count').textContent = list.length === 1 ? '1 change' : `${list.length} changes`;
+    if (!list.length) { log.innerHTML = '<p class="empty">No changes yet. Tap Pee, Poo or Both after each one.</p>'; return; }
+    const groups = [];
+    list.forEach((x) => {
+      const k = dayKey(x.time); let g = groups[groups.length - 1];
+      if (!g || g.key !== k) { g = { key: k, label: dayLabel(x.time), items: [] }; groups.push(g); }
+      g.items.push(x);
+    });
+    log.innerHTML = '';
+    groups.slice(0, 14).forEach((g) => {
+      const day = document.createElement('div'); day.className = 'day';
+      day.innerHTML = '<div class="day-head"><h3></h3><span class="total num"></span></div>';
+      day.querySelector('h3').textContent = g.label;
+      day.querySelector('.total').textContent = `${g.items.length} ${g.items.length === 1 ? 'change' : 'changes'} · ${g.items.filter(hasPee).length} pee · ${g.items.filter(hasPoo).length} poo`;
+      g.items.forEach((x) => {
+        const row = document.createElement('div'); row.className = 'sentry';
+        if (pendingDiaperDelete === x.id) {
+          row.innerHTML = '<span class="note">Delete this change?</span><span class="acts"><button type="button" class="small due">Delete</button><button type="button" class="small">Keep</button></span>';
+          const [del, keep] = row.querySelectorAll('button');
+          del.onclick = () => { state.diapers = state.diapers.filter((y) => y.id !== x.id); removeDiaper(x.id); pendingDiaperDelete = null; saveLocal(); render(); };
+          keep.onclick = () => { pendingDiaperDelete = null; renderDiaperLog(); };
+        } else {
+          row.innerHTML = '<span><span class="t num"></span><span class="tag"></span></span><span class="acts"><button type="button" class="ghost small">Edit</button><button type="button" class="ghost small">Delete</button></span>';
+          row.querySelector('.t').textContent = clock(x.time);
+          row.querySelector('.tag').textContent = diaperDesc(x);
+          const [edit, del] = row.querySelectorAll('button');
+          edit.onclick = () => openDiaper(x);
+          del.onclick = () => { pendingDiaperDelete = x.id; renderDiaperLog(); };
+        }
+        day.appendChild(row);
+      });
+      log.appendChild(day);
+    });
+  }
+
+  // ---------- diaper sheet ----------
+  let editingDiaper = null;
+  const draft = { kind: 'pee', color: '', texture: '', rash: false };
+  // Single-choice chip row; tapping the chosen chip again clears it when clearing is allowed.
+  function choice(host, opts, key, clearable) {
+    host.innerHTML = '';
+    opts.forEach(([v, label, sw]) => {
+      const b = document.createElement('button'); b.type = 'button';
+      b.setAttribute('aria-pressed', String(draft[key] === v));
+      if (sw) { const dot = document.createElement('span'); dot.className = 'swatch'; dot.style.background = sw; b.appendChild(dot); }
+      b.append(label);
+      b.onclick = () => { draft[key] = clearable && draft[key] === v ? '' : v; syncDiaperSheet(); };
+      host.appendChild(b);
+    });
+  }
+  function syncDiaperSheet() {
+    choice($('diaper-kind'), [['pee', 'Pee'], ['poo', 'Poo'], ['both', 'Both'], ['dry', 'Dry']], 'kind', false);
+    const poo = draft.kind === 'poo' || draft.kind === 'both';
+    $('poo-details').hidden = !poo;
+    choice($('diaper-color'), COLORS, 'color', true);
+    choice($('diaper-texture'), TEXTURES.map((t) => [t, t[0].toUpperCase() + t.slice(1)]), 'texture', true);
+    $('color-hint').hidden = !(poo && ['red', 'black', 'white'].includes(draft.color));
+    $('diaper-rash').setAttribute('aria-pressed', String(!!draft.rash));
+  }
+  $('diaper-rash').addEventListener('click', () => { draft.rash = !draft.rash; syncDiaperSheet(); });
+  function openDiaper(x) {
+    editingDiaper = x ? x.id : null;
+    Object.assign(draft, x ? { kind: x.kind, color: x.color, texture: x.texture, rash: x.rash } : { kind: 'pee', color: '', texture: '', rash: false });
+    $('diaper-sheet-title').textContent = x ? 'Diaper details' : 'Add a diaper change';
+    $('diaper-time').value = toLocalInput(x ? x.time : roundToMinute(Date.now()));
+    $('diaper-note').value = x ? x.note : '';
+    $('btn-diaper-save').textContent = x ? 'Save details' : 'Save change';
+    $('diaper-err').hidden = true;
+    syncDiaperSheet();
+    $('diaper-sheet').hidden = false;
+  }
+  const closeDiaper = () => { $('diaper-sheet').hidden = true; editingDiaper = null; };
+  $('btn-diaper-cancel').addEventListener('click', closeDiaper);
+  $('diaper-sheet').addEventListener('click', (e) => { if (e.target === $('diaper-sheet')) closeDiaper(); });
+  $('diaper-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const t = fromLocalInput($('diaper-time').value); const err = $('diaper-err');
+    if (t == null) { err.textContent = 'Pick when the change happened.'; err.hidden = false; return; }
+    if (t > Date.now() + MIN) { err.textContent = 'That time is in the future.'; err.hidden = false; return; }
+    const poo = draft.kind === 'poo' || draft.kind === 'both';
+    const fields = { time: t, kind: draft.kind, color: poo ? draft.color : '', texture: poo ? draft.texture : '', rash: !!draft.rash,
+      note: $('diaper-note').value.trim().slice(0, 200) };
+    let x = state.diapers.find((y) => y.id === editingDiaper);
+    if (x) Object.assign(x, fields); else { x = Object.assign({ id: makeId() }, fields); state.diapers.push(x); }
+    pushDiaper(x); saveLocal(); closeDiaper(); render();
+    if (fbConfig && !remote && !connecting) connect();
+  });
+
   // ---------- dashboard ----------
+  // What Home shows is a per-phone choice, kept in localStorage.
+  const DASH_KEY = 'feeding-tracker.dash';
+  const dash = { feeds: true, sleep: true, diapers: true, days: 7 };
+  try { Object.assign(dash, JSON.parse(store.get(DASH_KEY) || '{}')); } catch (e) {}
+  if (![7, 14].includes(dash.days)) dash.days = 7;
+  const KINDS = ['feeds', 'sleep', 'diapers'];
+  function applyDash() {
+    document.querySelectorAll('#dash-kinds button').forEach((b) => b.setAttribute('aria-pressed', String(!!dash[b.dataset.kind])));
+    document.querySelectorAll('#dash-days button').forEach((b) => b.setAttribute('aria-pressed', String(dash.days === Number(b.dataset.days))));
+    document.querySelectorAll('#view-home [data-show]').forEach((el) => { el.hidden = !dash[el.dataset.show]; });
+    $('wk-title').textContent = `Last ${dash.days} days`;
+  }
+  const saveDash = () => { store.set(DASH_KEY, JSON.stringify(dash)); chartSel.oz = chartSel.sleep = chartSel.dia = null; renderHome(); };
+  document.querySelectorAll('#dash-kinds button').forEach((b) => b.addEventListener('click', () => {
+    const k = b.dataset.kind;
+    if (dash[k] && KINDS.filter((x) => dash[x]).length === 1) return; // keep at least one tracker on
+    dash[k] = !dash[k]; saveDash();
+  }));
+  document.querySelectorAll('#dash-days button').forEach((b) => b.addEventListener('click', () => { dash.days = Number(b.dataset.days); saveDash(); }));
+
   function tickHome() {
     const now = Date.now(); const f = lastFeed();
     const fc = $('home-feed-card');
@@ -996,11 +1267,14 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     $('home-sleep-label').textContent = a ? 'Asleep for' : 'Awake for';
     $('home-sleep-big').textContent = a ? dur(now - a.start) : wake ? dur(now - wake) : '--';
     $('home-sleep-sub').textContent = a ? `Since ${clock(a.start)}` : wake ? `Woke up ${clock(wake)}` : 'No sleep logged yet';
+    const d = lastDiaper(); const lp = lastPoo();
+    $('home-diaper-big').textContent = d ? ago(now - d.time) : '--';
+    $('home-diaper-sub').textContent = d ? `${DKINDS[d.kind]} at ${clock(d.time)}${lp && lp !== d ? ` · last poo ${ago(now - lp.time)}` : ''}` : 'No changes logged yet';
   }
   const hours = (ms) => { const h = ms / 3600000; return h >= 10 ? `${Math.round(h)}h` : `${Math.round(h * 10) / 10}h`; };
-  const chartSel = { oz: null, sleep: null };
+  const chartSel = { oz: null, sleep: null, dia: null };
   function barChart(host, cap, key, data, cls, avg) {
-    const W = 320, H = 132, top = 20, bottom = 20, n = data.length, gap = 8;
+    const W = 320, H = 132, top = 20, bottom = 20, n = data.length, gap = n > 7 ? 4 : 8;
     const bw = (W - gap * (n - 1)) / n;
     const max = Math.max(1e-9, ...data.map((d) => d.value), avg || 0) * 1.12;
     const y = (v) => top + (H - top - bottom) * (1 - v / max); const base = H - bottom;
@@ -1025,7 +1299,12 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     });
   }
   function renderHome() {
+    applyDash();
     const now = Date.now(); const today0 = startOfDay(now); const day0 = now - DAY;
+    const dToday = state.diapers.filter((x) => x.time >= today0);
+    $('st-dia').textContent = String(dToday.length);
+    $('st-pee').textContent = String(dToday.filter(hasPee).length);
+    $('st-poo').textContent = String(dToday.filter(hasPoo).length);
     $('home-date').textContent = new Date(now).toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
     const todays = state.feeds.filter((x) => x.time >= today0);
     $('st-oz').textContent = oz(todays.reduce((a, x) => a + x.oz, 0));
@@ -1038,18 +1317,22 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     const longest = Math.max(0, ...in24);
     $('st-longest').textContent = longest ? dur(longest) : '--';
 
-    // 24-hour strip: sleep blocks and feed ticks positioned by time
+    // 24-hour strip: sleep blocks, feed ticks along the top, diaper ticks along the bottom
     const tl = $('timeline'); tl.innerHTML = '';
     const pct = (t) => `${((t - day0) / DAY) * 100}%`;
-    state.sleeps.filter((x) => sleepEnd(x, now) > day0).forEach((x) => {
+    (dash.sleep ? state.sleeps : []).filter((x) => sleepEnd(x, now) > day0).forEach((x) => {
       const el = document.createElement('div'); el.className = 's';
       const a = Math.max(x.start, day0); el.style.left = pct(a); el.style.width = `${((sleepEnd(x, now) - a) / DAY) * 100}%`;
       el.title = `Sleep ${clock(x.start)} – ${x.end == null ? 'now' : clock(x.end)} (${dur(sleepEnd(x, now) - x.start)})`;
       tl.appendChild(el);
     });
-    state.feeds.filter((x) => x.time > day0).forEach((x) => {
+    (dash.feeds ? state.feeds : []).filter((x) => x.time > day0).forEach((x) => {
       const el = document.createElement('div'); el.className = 'f'; el.style.left = pct(x.time);
       el.title = `Feed ${clock(x.time)} · ${oz(x.oz)} oz`; tl.appendChild(el);
+    });
+    (dash.diapers ? state.diapers : []).filter((x) => x.time > day0).forEach((x) => {
+      const el = document.createElement('div'); el.className = 'p'; el.style.left = pct(x.time);
+      el.title = `Diaper ${clock(x.time)} · ${diaperDesc(x)}`; tl.appendChild(el);
     });
     tl.querySelectorAll('div').forEach((el) => el.addEventListener('click', () => { $('timeline-cap').textContent = el.title; }));
     $('timeline-cap').textContent = 'Tap a block or tick for details.';
@@ -1060,34 +1343,37 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
       $('timeline-axis').appendChild(sp);
     });
 
-    // Last 7 calendar days, today last
+    // Last 7 or 14 calendar days, today last
     const days = [];
-    for (let i = 6; i >= 0; i--) {
+    for (let i = dash.days - 1; i >= 0; i--) {
       const d = new Date(now); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i);
       const a = d.getTime(); const e = new Date(d); e.setDate(e.getDate() + 1); const b = e.getTime();
       const fs = state.feeds.filter((x) => x.time >= a && x.time < b);
       days.push({ today: i === 0, name: i === 0 ? 'Today' : d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }),
-        label: i === 0 ? 'Today' : d.toLocaleDateString([], { weekday: 'short' }),
+        label: dash.days > 7 ? String(d.getDate()) : i === 0 ? 'Today' : d.toLocaleDateString([], { weekday: 'short' }),
         oz: fs.reduce((s2, x) => s2 + x.oz, 0), feeds: fs.length,
-        sleep: state.sleeps.reduce((s2, x) => s2 + overlap(x, a, b, now), 0) });
+        sleep: state.sleeps.reduce((s2, x) => s2 + overlap(x, a, b, now), 0),
+        ...(() => { const ds = state.diapers.filter((x) => x.time >= a && x.time < b);
+          return { dia: ds.length, pee: ds.filter(hasPee).length, poo: ds.filter(hasPoo).length }; })() });
     }
     // Averages use finished days that have something logged, so a half-done today doesn't drag them down.
     const avgOf = (k) => { const full = days.filter((d) => !d.today && d[k] > 0); return full.length ? full.reduce((s2, d) => s2 + d[k], 0) / full.length : null; };
-    const ozAvg = avgOf('oz'); const slAvg = avgOf('sleep');
+    const ozAvg = avgOf('oz'); const slAvg = avgOf('sleep'); const diaAvg = avgOf('dia');
     $('wk-oz-hero').textContent = ozAvg != null ? `avg ${oz(Math.round(ozAvg * 10) / 10)} oz a day` : '';
     $('wk-sleep-hero').textContent = slAvg != null ? `avg ${dur(slAvg)} a day` : '';
     barChart($('wk-oz'), $('wk-oz-cap'), 'oz', days.map((d) => ({ value: d.oz, label: d.label, short: `${oz(Math.round(d.oz * 10) / 10)}`,
       caption: `${d.name}: ${oz(d.oz)} oz in ${d.feeds} ${d.feeds === 1 ? 'feed' : 'feeds'}` })), 'bar-f', ozAvg);
     barChart($('wk-sleep'), $('wk-sleep-cap'), 'sleep', days.map((d) => ({ value: d.sleep, label: d.label, short: d.sleep ? hours(d.sleep) : '0',
       caption: `${d.name}: ${dur(d.sleep)} of sleep${d.today ? ' so far' : ''}` })), 'bar-s', slAvg);
+    $('wk-dia-hero').textContent = diaAvg != null ? `avg ${Math.round(diaAvg * 10) / 10} a day` : '';
+    barChart($('wk-dia'), $('wk-dia-cap'), 'dia', days.map((d) => ({ value: d.dia, label: d.label, short: String(d.dia),
+      caption: `${d.name}: ${d.dia} ${d.dia === 1 ? 'change' : 'changes'} (${d.pee} with pee, ${d.poo} with poo)` })), 'bar-d', diaAvg);
   }
-  $('home-feed-card').addEventListener('click', () => setTab('feeds'));
-  $('home-sleep-card').addEventListener('click', () => setTab('sleep'));
   $('home-log-feed').addEventListener('click', () => (lastFeed() ? openFeed(false) : setTab('feeds')));
 
   // ---------- tabs ----------
   const TAB_KEY = 'feeding-tracker.tab';
-  let tab = ['home', 'feeds', 'sleep'].includes(store.get(TAB_KEY)) ? store.get(TAB_KEY) : 'home';
+  let tab = ['home', 'feeds', 'sleep', 'diaper'].includes(store.get(TAB_KEY)) ? store.get(TAB_KEY) : 'home';
   function setTab(t) { tab = t; store.set(TAB_KEY, t); render(); window.scrollTo(0, 0); }
   document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('click', () => setTab(b.dataset.tab)));
 
@@ -1125,16 +1411,17 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
   function render() {
     const has = state.feeds.length > 0;
     // Tabs, Home and Sleep work before any feed is logged; only the Feeds tab shows the first-feed form.
-    ['home', 'feeds', 'sleep'].forEach((t) => { $('view-' + t).hidden = tab !== t; });
+    ['home', 'feeds', 'sleep', 'diaper'].forEach((t) => { $('view-' + t).hidden = tab !== t; });
     $('setup').hidden = has || tab !== 'feeds'; $('clock').hidden = !has; $('history').hidden = !has;
     document.querySelectorAll('.tabs button').forEach((b) => { if (b.dataset.tab === tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
-    $('title').textContent = { home: `${state.name}'s day`, feeds: `${state.name}'s feeds`, sleep: `${state.name}'s sleep` }[tab];
+    $('title').textContent = { home: `${state.name}'s day`, feeds: `${state.name}'s feeds`, sleep: `${state.name}'s sleep`, diaper: `${state.name}'s diapers` }[tab];
     $('subtitle').textContent = tab === 'feeds' && !has ? 'Bottle log and next-feed reminder'
       : tab === 'feeds' ? `Every ${dur(state.intervalMin * MIN)} · snooze ${state.snoozeMin} min`
-      : tab === 'sleep' ? 'One tap when asleep, one tap when awake' : 'Feeding and sleep at a glance';
+      : tab === 'sleep' ? 'One tap when asleep, one tap when awake'
+      : tab === 'diaper' ? 'One tap per change, details if you want them' : 'Feeds, sleep and diapers at a glance';
     if (!has) $('alert').hidden = true;
     else { renderLog(); renderNotif(); renderSync(); tick(); }
-    renderSleep();
+    renderSleep(); renderDiaper();
     if (tab === 'home') { renderHome(); tickHome(); }
   }
 
@@ -1145,7 +1432,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     if (fbConfig && familyId) { pendingAction = h; setTimeout(() => { if (pendingAction) { pendingAction = null; handleAction(h); } }, 6000); } else handleAction(h);
     try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
   }
-  if (fbConfig && (familyId || state.feeds.length || state.sleeps.length)) connect();
+  if (fbConfig && (familyId || state.feeds.length || state.sleeps.length || state.diapers.length)) connect();
   else if (fbConfig) { syncState = 'off'; $('join-form').hidden = false; }
   $('join-form').addEventListener('submit', (e) => {
     e.preventDefault();
@@ -1157,11 +1444,12 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
   });
   let secs = 0;
   setInterval(() => {
-    tick(); tickSleep(); secs++;
+    tick(); tickSleep(); tickDiaper(); secs++;
     if (tab === 'home') { tickHome(); if (secs % 60 === 0) renderHome(); }
     if (tab === 'sleep' && secs % 60 === 0) renderSleepLog();
+    if (justLogged && secs % 60 === 0) renderDiaper();
   }, 1000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeFeed(); closeSettings(); closeSleep(); } });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeFeed(); closeSettings(); closeSleep(); closeDiaper(); } });
 })();
 </script>
