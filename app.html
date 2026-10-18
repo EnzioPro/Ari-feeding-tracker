@@ -18,6 +18,11 @@
   --due: #c2410c;
   --due-soft: #fde8dc;
   --ok: #1f7a4d;
+  --sleep: #0e8b78;
+  --sleep-ink: #ffffff;
+  --sleep-soft: #d9f1ec;
+  --feed-mark: #2f5fc4;
+  --sleep-mark: #0e8b78;
   --font-display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
   --font-body: "Nunito Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --radius: 14px;
@@ -27,18 +32,20 @@
     --bg: #0f1522; --surface: #182133; --ink: #e6ecf6; --muted: #9aa8bf; --line: #2a3650;
     --accent: #7ea6ff; --accent-ink: #0f1522; --accent-soft: #233456; --milk: #1d283d;
     --due: #ff9a62; --due-soft: #3a2418; --ok: #5fd39a; color-scheme: dark;
+    --sleep: #46c9b1; --sleep-ink: #0f1522; --sleep-soft: #173a3a; --feed-mark: #5a86e6; --sleep-mark: #1f9a85;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0f1522; --surface: #182133; --ink: #e6ecf6; --muted: #9aa8bf; --line: #2a3650;
   --accent: #7ea6ff; --accent-ink: #0f1522; --accent-soft: #233456; --milk: #1d283d;
   --due: #ff9a62; --due-soft: #3a2418; --ok: #5fd39a; color-scheme: dark;
+  --sleep: #46c9b1; --sleep-ink: #0f1522; --sleep-soft: #173a3a; --feed-mark: #5a86e6; --sleep-mark: #1f9a85;
 }
 * { box-sizing: border-box; }
 body {
   background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.45;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 20px 48px;
+  padding-block: 20px calc(96px + env(safe-area-inset-bottom, 0px));
 }
 main { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
 h1, h2 { font-family: var(--font-display); font-weight: 700; margin: 0; text-wrap: balance; line-height: 1.1; }
@@ -55,6 +62,8 @@ button, .btn {
 }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+button.sleep { background: var(--sleep); border-color: var(--sleep); color: var(--sleep-ink); }
+button:disabled { opacity: .45; cursor: default; }
 button.due { background: var(--due); border-color: var(--due); color: #fff; }
 button.ghost { background: transparent; border-color: transparent; color: var(--muted); padding-inline: 10px; }
 button.small { min-height: 34px; padding: 6px 12px; font-size: .85rem; }
@@ -119,6 +128,65 @@ input, select {
 @media (min-width: 600px) { .scrim { align-items: center; } .sheet { border-radius: 18px; } }
 .sheet-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
 .err { color: var(--due); font-size: .9rem; margin: 0; }
+
+/* Bottom tabs */
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--surface); border-top: 1px solid var(--line);
+  padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
+.tabs-inner { display: flex; gap: 4px; max-width: 520px; margin: 0 auto; }
+.tabs button { flex: 1; border: 0; background: transparent; border-radius: 12px; color: var(--muted); font-size: .78rem; padding: 6px 4px; min-height: 52px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.tabs button[aria-current="page"] { color: var(--accent); background: var(--accent-soft); }
+.tabs svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Dashboard */
+.now-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 340px) { .now-grid { grid-template-columns: 1fr; } }
+.now-card { font-weight: 400; text-align: left; border-radius: 12px; background: var(--milk); padding: 12px 14px; min-width: 0;
+  display: flex; flex-direction: column; gap: 4px; }
+.now-card .big { font-family: var(--font-display); font-size: 1.75rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.now-card .note { overflow-wrap: anywhere; }
+.now-card.is-due { background: var(--due-soft); border-color: var(--due); }
+.now-card.is-due .big { color: var(--due); }
+.now-card.is-asleep { background: var(--sleep-soft); border-color: var(--sleep); }
+.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 440px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(3, auto); grid-auto-flow: column; } }
+.tile { background: var(--milk); border-radius: 10px; padding: 10px 12px; border-left: 4px solid var(--feed-mark); min-width: 0; }
+.tile.s { border-left-color: var(--sleep-mark); }
+.tile .v { font-family: var(--font-display); font-size: 1.35rem; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.tile .k { font-size: .78rem; color: var(--muted); font-weight: 600; }
+.legend { display: flex; gap: 14px; font-size: .8rem; color: var(--muted); flex-wrap: wrap; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.tl { position: relative; height: 32px; background: var(--milk); border-radius: 8px; overflow: hidden; }
+.tl .s { position: absolute; top: 5px; bottom: 5px; background: var(--sleep-mark); border-radius: 4px; min-width: 2px; }
+.tl .f { position: absolute; top: 2px; bottom: 2px; width: 4px; margin-left: -2px; background: var(--feed-mark); border-radius: 2px; box-shadow: 0 0 0 2px var(--milk); }
+.tl-axis { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); margin-top: 4px; }
+.chart-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.chart-head .hero { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; }
+.chart svg { width: 100%; height: auto; display: block; touch-action: manipulation; }
+.chart .ax { fill: var(--muted); font-size: 11px; font-family: var(--font-body); }
+.chart .ax.on { fill: var(--ink); font-weight: 700; }
+.chart .val { fill: var(--ink); font-size: 11px; font-weight: 700; font-family: var(--font-body); }
+.chart .base { stroke: var(--line); stroke-width: 1; }
+.chart .avg { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
+.chart .sel { fill: var(--milk); }
+.chart .bar-f { fill: var(--feed-mark); }
+.chart .bar-s { fill: var(--sleep-mark); }
+.chart .hit { fill: transparent; cursor: pointer; }
+.chart-cap { margin: 4px 0 0; font-size: .85rem; color: var(--muted); min-height: 1.3em; }
+
+/* Sleep */
+.sleep-hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; padding: 6px 0; }
+.sleep-hero .moon { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+.sleep-hero.is-asleep .moon { background: var(--sleep-soft); color: var(--sleep); }
+.sleep-hero .moon svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.sleep-hero .countdown { font-size: 2.8rem; }
+button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
+.sentry { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+.sentry:last-child { border-bottom: 0; }
+.sentry .t { font-weight: 700; white-space: nowrap; }
+.sentry .tag { display: block; color: var(--muted); font-size: .8rem; font-weight: 600; }
+.sentry .acts { display: flex; gap: 2px; }
+.sentry.live .tag { color: var(--sleep); }
 </style>
 
 <main id="app">
@@ -170,8 +238,64 @@ input, select {
     </div>
   </section>
 
-  <!-- Clock -->
-  <section class="panel" id="clock" hidden>
+  <!-- Home dashboard -->
+  <div id="view-home" class="view" hidden>
+    <section class="panel">
+      <div class="now-grid">
+        <button type="button" class="now-card" id="home-feed-card">
+          <span class="label" id="home-feed-label">Next feed in</span>
+          <span class="big" id="home-feed-big">--</span>
+          <span class="note" id="home-feed-sub"></span>
+        </button>
+        <button type="button" class="now-card" id="home-sleep-card">
+          <span class="label" id="home-sleep-label">Awake for</span>
+          <span class="big" id="home-sleep-big">--</span>
+          <span class="note" id="home-sleep-sub"></span>
+        </button>
+      </div>
+      <div class="row">
+        <button class="primary" id="home-log-feed" type="button">Log a feed</button>
+        <button class="sleep" id="home-sleep-toggle" type="button">Start sleep</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="top"><h2>Today</h2><span class="sub" id="home-date"></span></div>
+      <div class="tiles">
+        <div class="tile"><div class="v num" id="st-oz">0</div><div class="k">oz today</div></div>
+        <div class="tile"><div class="v num" id="st-feeds">0</div><div class="k">feeds today</div></div>
+        <div class="tile"><div class="v num" id="st-gap">--</div><div class="k">avg between feeds</div></div>
+        <div class="tile s"><div class="v num" id="st-sleep">0m</div><div class="k">sleep, last 24h</div></div>
+        <div class="tile s"><div class="v num" id="st-naps">0</div><div class="k">naps today</div></div>
+        <div class="tile s"><div class="v num" id="st-longest">--</div><div class="k">longest sleep, 24h</div></div>
+      </div>
+      <div>
+        <div class="chart-head"><span class="label">Last 24 hours</span>
+          <span class="legend"><span><i style="background:var(--sleep-mark)"></i>Sleep</span><span><i style="background:var(--feed-mark)"></i>Feed</span></span></div>
+        <div class="tl" id="timeline" role="img" aria-label="Sleep and feeds over the last 24 hours" style="margin-top:6px"></div>
+        <div class="tl-axis" id="timeline-axis"></div>
+        <p class="chart-cap" id="timeline-cap"></p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Last 7 days</h2>
+      <div class="chart">
+        <div class="chart-head"><span class="label">Milk per day</span><span class="hero num" id="wk-oz-hero"></span></div>
+        <div id="wk-oz"></div>
+        <p class="chart-cap" id="wk-oz-cap"></p>
+      </div>
+      <div class="chart">
+        <div class="chart-head"><span class="label">Sleep per day</span><span class="hero num" id="wk-sleep-hero"></span></div>
+        <div id="wk-sleep"></div>
+        <p class="chart-cap" id="wk-sleep-cap"></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- Feeds -->
+  <div id="view-feeds" class="view" hidden>
+  <section class="panel" id="clock">
     <div class="clock">
       <div class="ring" id="ring">
         <svg viewBox="0 0 120 120" aria-hidden="true">
@@ -195,12 +319,60 @@ input, select {
     <p class="note" id="sync-note" hidden></p>
   </section>
 
-  <!-- History -->
-  <section class="panel" id="history" hidden>
+  <section class="panel" id="history">
     <div class="top"><h2>Feeding log</h2><span class="sub" id="history-count"></span></div>
     <div id="log"></div>
   </section>
+  </div>
+
+  <!-- Sleep -->
+  <div id="view-sleep" class="view" hidden>
+    <section class="panel">
+      <div class="sleep-hero" id="sleep-hero">
+        <div class="moon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></div>
+        <div class="label" id="sleep-state">Awake</div>
+        <div class="countdown" id="sleep-timer">--</div>
+        <p class="sub" id="sleep-since"></p>
+      </div>
+      <button class="sleep big" id="btn-sleep-toggle" type="button">Start sleep</button>
+      <div class="field">
+        <span id="sleep-ago-label">Already asleep? Tap when it started:</span>
+        <div class="chips" id="sleep-ago"></div>
+      </div>
+      <div><button class="small" id="btn-sleep-add" type="button">Add a past sleep</button></div>
+      <p class="note" id="sleep-sync-note" hidden></p>
+    </section>
+    <section class="panel">
+      <div class="top"><h2>Sleep log</h2><span class="sub" id="sleep-count"></span></div>
+      <div id="sleep-log"></div>
+    </section>
+  </div>
 </main>
+
+<nav class="tabs" id="tabs" hidden aria-label="Sections">
+  <div class="tabs-inner">
+    <button type="button" data-tab="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Home</button>
+    <button type="button" data-tab="feeds"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2h6M10 2v3l-2 3v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V8l-2-3V2M8 12h8"/></svg>Feeds</button>
+    <button type="button" data-tab="sleep"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>Sleep</button>
+  </div>
+</nav>
+
+<!-- Sleep sheet -->
+<div class="scrim" id="sleep-sheet" hidden>
+  <form class="sheet" id="sleep-form" novalidate aria-labelledby="sleep-sheet-title">
+    <h2 id="sleep-sheet-title">Add a sleep</h2>
+    <p class="sub" id="sleep-sheet-sub">Leave "Woke up" empty if the baby is still asleep.</p>
+    <div class="row">
+      <label class="field"><span>Fell asleep</span><input id="sleep-start" type="datetime-local" required></label>
+      <label class="field"><span>Woke up</span><input id="sleep-end" type="datetime-local"></label>
+    </div>
+    <p class="err" id="sleep-err" hidden></p>
+    <div class="sheet-actions">
+      <button type="button" id="btn-sleep-cancel">Cancel</button>
+      <button class="primary" type="submit" id="btn-sleep-save">Save sleep</button>
+    </div>
+  </form>
+</div>
 
 <!-- Log / edit sheet -->
 <div class="scrim" id="sheet" hidden>
@@ -254,7 +426,7 @@ input, select {
     </div>
     <div class="panel" style="background:var(--milk)">
       <span class="label">Start over</span>
-      <p class="note" id="reset-note">Clears every logged feed on this device.</p>
+      <p class="note" id="reset-note">Clears every logged feed and sleep on this device.</p>
       <div id="reset-zone"><button type="button" class="small" id="btn-reset">Clear all data</button></div>
     </div>
     <div class="sheet-actions">
@@ -268,10 +440,11 @@ input, select {
 (() => {
   const KEY = 'feeding-tracker.v1';
   const MIN = 60000;
+  const DAY = 24 * 60 * MIN;
   const $ = (id) => document.getElementById(id);
 
   // ---------- state ----------
-  const blank = () => ({ name: 'Ari', intervalMin: 180, snoozeMin: 15, sound: 'on', feeds: [], snoozeUntil: null, alertedFor: null });
+  const blank = () => ({ name: 'Ari', intervalMin: 180, snoozeMin: 15, sound: 'on', feeds: [], snoozeUntil: null, alertedFor: null, sleeps: [], sleepUnsynced: [] });
   let state = blank();
   let memoryOnly = false;
   try {
@@ -296,7 +469,7 @@ input, select {
   if (fbConfig) {
     const fromUrl = new URLSearchParams(location.search).get('family');
     familyId = (fromUrl && /^[a-z0-9]{6,40}$/.test(fromUrl) ? fromUrl : null) || store.get(FAMILY_KEY);
-    if (familyId && familyId !== store.get(FAMILY_KEY) && fromUrl) state.feeds = []; // joined someone else's log
+    if (familyId && familyId !== store.get(FAMILY_KEY) && fromUrl) { state.feeds = []; state.sleeps = []; state.sleepUnsynced = []; } // joined someone else's log
   }
   function pointManifestAtFamily() {
     const link = document.querySelector('link[rel="manifest"]');
@@ -328,6 +501,26 @@ input, select {
   function pushSettings() { if (remote) remote.fs.setDoc(remote.famRef, sharedSettings(), { merge: true }).catch(syncErr); }
   function pushFeed(f) { if (remote) remote.fs.setDoc(remote.fs.doc(remote.feedsCol, f.id), { time: f.time, oz: f.oz }).catch(syncErr); }
   function removeFeed(id) { if (remote) remote.fs.deleteDoc(remote.fs.doc(remote.feedsCol, id)).catch(syncErr); }
+  // Sleeps live in families/{id}/sleeps/{sleepId} as { start, end } (end is null while asleep).
+  // A sleep stays in sleepUnsynced until the server confirms it, so one logged offline, or before
+  // the Firestore rules allowed sleeps, is kept on this phone and uploaded on the next connection.
+  let sleepSync = 'ok';
+  const sleepErr = () => { sleepSync = 'error'; renderSleepSync(); };
+  const markSleep = (id, pending) => {
+    state.sleepUnsynced = state.sleepUnsynced.filter((x) => x !== id);
+    if (pending) state.sleepUnsynced.push(id);
+  };
+  function pushSleep(sl) {
+    markSleep(sl.id, true);
+    if (!remote) return;
+    remote.fs.setDoc(remote.fs.doc(remote.sleepsCol, sl.id), { start: sl.start, end: sl.end == null ? null : sl.end })
+      .then(() => { markSleep(sl.id, false); saveLocal(); if (sleepSync === 'error') { sleepSync = 'ok'; renderSleepSync(); } })
+      .catch(sleepErr);
+  }
+  function removeSleep(id) {
+    markSleep(id, false);
+    if (remote) remote.fs.deleteDoc(remote.fs.doc(remote.sleepsCol, id)).catch(sleepErr);
+  }
   let connecting = false;
   let pendingAction = null;
   async function connect() {
@@ -343,10 +536,12 @@ input, select {
       pointManifestAtFamily();
       const famRef = fs.doc(db, 'families', familyId);
       const feedsCol = fs.collection(famRef, 'feeds');
-      remote = { fs, famRef, feedsCol };
+      const sleepsCol = fs.collection(famRef, 'sleeps');
+      remote = { fs, famRef, feedsCol, sleepsCol };
       if (isNew) { // first device: upload what is already logged here
         if (state.feeds.length) pushSettings();
         state.feeds.forEach(pushFeed);
+        state.sleeps.forEach(pushSleep);
       }
       fs.onSnapshot(famRef, (snap) => {
         const d = snap.data();
@@ -365,6 +560,16 @@ input, select {
         syncState = q.metadata.fromCache ? 'offline' : 'live';
         saveLocal(); render();
       }, syncErr);
+      let resent = false;
+      fs.onSnapshot(sleepsCol, (q) => {
+        const pending = state.sleeps.filter((x) => state.sleepUnsynced.includes(x.id));
+        const fromServer = q.docs.filter((d) => !state.sleepUnsynced.includes(d.id))
+          .map((d) => ({ id: d.id, start: d.data().start, end: d.data().end == null ? null : d.data().end }));
+        state.sleeps = fromServer.concat(pending);
+        if (sleepSync === 'error') sleepSync = 'ok';
+        saveLocal(); render();
+        if (!resent) { resent = true; pending.forEach(pushSleep); }
+      }, sleepErr);
     } catch (e) { syncErr(); }
   }
 
@@ -547,7 +752,7 @@ input, select {
     $('push-topic').textContent = pushTopic() || '';
     $('push-note').textContent = '';
     $('share-note').textContent = '';
-    $('reset-note').textContent = remote ? 'Clears every logged feed for everyone sharing this log.' : 'Clears every logged feed on this device.';
+    $('reset-note').textContent = remote ? 'Clears every logged feed and sleep for everyone sharing this log.' : 'Clears every logged feed and sleep on this device.';
     resetIdle();
     $('settings').hidden = false;
   });
@@ -566,9 +771,10 @@ input, select {
   });
   function resetIdle() { $('reset-zone').innerHTML = '<button type="button" class="small" id="btn-reset">Clear all data</button>'; $('btn-reset').onclick = resetAsk; }
   function resetAsk() {
-    $('reset-zone').innerHTML = '<div class="confirm-del"><span class="note">Delete every feed?</span><button type="button" class="small due" id="btn-reset-yes">Delete all</button><button type="button" class="small" id="btn-reset-no">Keep</button></div>';
+    $('reset-zone').innerHTML = '<div class="confirm-del"><span class="note">Delete every feed and sleep?</span><button type="button" class="small due" id="btn-reset-yes">Delete all</button><button type="button" class="small" id="btn-reset-no">Keep</button></div>';
     $('btn-reset-yes').onclick = () => {
       state.feeds.forEach((f) => removeFeed(f.id));
+      state.sleeps.forEach((x) => removeSleep(x.id));
       const sound = state.sound; state = blank(); state.sound = sound;
       save(); closeSettings(); render(); scheduleReminder();
     };
@@ -638,6 +844,247 @@ input, select {
     });
   }
 
+  // ---------- sleep ----------
+  const sleepEnd = (x, now) => (x.end == null ? now : x.end);
+  const overlap = (x, a, b, now) => Math.max(0, Math.min(sleepEnd(x, now), b) - Math.max(x.start, a));
+  const sortedSleeps = () => [...state.sleeps].sort((a, b) => b.start - a.start);
+  const activeSleep = () => sortedSleeps().find((x) => x.end == null) || null;
+  const lastWake = () => state.sleeps.reduce((m, x) => (x.end != null && (m == null || x.end > m) ? x.end : m), null);
+  const isNap = (x) => { const h = new Date(x.start).getHours(); return h >= 7 && h < 19; };
+  const startOfDay = (ms) => { const d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); };
+  const makeId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  function startSleep(at) {
+    if (activeSleep()) return;
+    const sl = { id: makeId(), start: roundToMinute(at), end: null };
+    state.sleeps.push(sl); pushSleep(sl); saveLocal(); render();
+    if (fbConfig && !remote && !connecting) connect();
+  }
+  function endSleep(at) {
+    state.sleeps.filter((x) => x.end == null).forEach((x) => { x.end = Math.max(roundToMinute(at), x.start + MIN); pushSleep(x); });
+    saveLocal(); render();
+  }
+  const toggleSleep = () => (activeSleep() ? endSleep(Date.now()) : startSleep(Date.now()));
+  $('btn-sleep-toggle').addEventListener('click', toggleSleep);
+  $('home-sleep-toggle').addEventListener('click', toggleSleep);
+
+  function renderSleepSync() {
+    const el = $('sleep-sync-note');
+    if (sleepSync === 'error') { el.hidden = false; el.className = 'note'; el.textContent = 'Sleeps are saved on this phone but aren\'t reaching the family log yet. They will upload once it accepts them.'; return; }
+    el.hidden = syncState !== 'live'; el.className = 'note ok'; el.textContent = 'Shared with family. Sleeps logged on any phone show up here.';
+  }
+  function tickSleep() {
+    const now = Date.now(); const a = activeSleep(); const wake = lastWake();
+    $('sleep-hero').classList.toggle('is-asleep', !!a);
+    $('sleep-state').textContent = a ? `${state.name} is asleep` : `${state.name} is awake`;
+    $('sleep-timer').textContent = a ? countdown(now - a.start) : wake ? countdown(now - wake) : '--';
+    $('sleep-since').textContent = a ? `Fell asleep at ${clock(a.start)}` : wake ? `Woke up at ${clock(wake)}` : 'Tap Start sleep when the baby falls asleep.';
+  }
+  function renderSleep() {
+    const a = activeSleep(); const now = Date.now();
+    const btn = $('btn-sleep-toggle'); btn.textContent = a ? 'Woke up' : 'Start sleep'; btn.className = a ? 'primary big' : 'sleep big';
+    const hb = $('home-sleep-toggle'); hb.textContent = a ? 'Woke up' : 'Start sleep';
+    $('sleep-ago-label').textContent = a ? 'Woke up a bit ago? Tap when:' : 'Already asleep? Tap when it started:';
+    const chips = $('sleep-ago'); chips.innerHTML = '';
+    [5, 10, 15, 30].forEach((m) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = `${m} min ago`;
+      const at = now - m * MIN;
+      if (a && at <= a.start) b.disabled = true;
+      if (!a && wakeBlocks(at)) b.disabled = true;
+      b.onclick = () => (activeSleep() ? endSleep(Date.now() - m * MIN) : startSleep(Date.now() - m * MIN));
+      chips.appendChild(b);
+    });
+    tickSleep(); renderSleepSync(); renderSleepLog();
+  }
+  // A new sleep can't start before the last one ended.
+  const wakeBlocks = (at) => { const w = lastWake(); return w != null && at < w; };
+
+  let pendingSleepDelete = null;
+  function renderSleepLog() {
+    const list = sortedSleeps(); const log = $('sleep-log'); const now = Date.now();
+    $('sleep-count').textContent = list.length === 1 ? '1 sleep' : `${list.length} sleeps`;
+    if (!list.length) { log.innerHTML = '<p class="empty">No sleeps yet. Tap Start sleep when the baby falls asleep.</p>'; return; }
+    const groups = [];
+    list.forEach((x) => {
+      const k = dayKey(x.start); let g = groups[groups.length - 1];
+      if (!g || g.key !== k) { g = { key: k, label: dayLabel(x.start), items: [], total: 0 }; groups.push(g); }
+      g.items.push(x); g.total += sleepEnd(x, now) - x.start;
+    });
+    log.innerHTML = '';
+    groups.slice(0, 14).forEach((g) => {
+      const day = document.createElement('div'); day.className = 'day';
+      day.innerHTML = '<div class="day-head"><h3></h3><span class="total num"></span></div>';
+      day.querySelector('h3').textContent = g.label;
+      day.querySelector('.total').textContent = `${dur(g.total)} · ${g.items.length} ${g.items.length === 1 ? 'sleep' : 'sleeps'}`;
+      g.items.forEach((x) => {
+        const row = document.createElement('div'); row.className = 'sentry' + (x.end == null ? ' live' : '');
+        if (pendingSleepDelete === x.id) {
+          row.innerHTML = '<span class="note">Delete this sleep?</span><span class="acts"><button type="button" class="small due">Delete</button><button type="button" class="small">Keep</button></span>';
+          const [del, keep] = row.querySelectorAll('button');
+          del.onclick = () => { state.sleeps = state.sleeps.filter((y) => y.id !== x.id); removeSleep(x.id); pendingSleepDelete = null; saveLocal(); render(); };
+          keep.onclick = () => { pendingSleepDelete = null; renderSleepLog(); };
+        } else {
+          row.innerHTML = '<span><span class="t num"></span><span class="tag num"></span></span><span class="acts"><button type="button" class="ghost small">Edit</button><button type="button" class="ghost small">Delete</button></span>';
+          row.querySelector('.t').textContent = `${clock(x.start)} – ${x.end == null ? 'now' : clock(x.end)}`;
+          row.querySelector('.tag').textContent = `${x.end == null ? 'asleep' : isNap(x) ? 'nap' : 'night'} · ${dur(sleepEnd(x, now) - x.start)}`;
+          const [edit, del] = row.querySelectorAll('button');
+          edit.onclick = () => openSleep(x);
+          del.onclick = () => { pendingSleepDelete = x.id; renderSleepLog(); };
+        }
+        day.appendChild(row);
+      });
+      log.appendChild(day);
+    });
+  }
+
+  // ---------- sleep sheet ----------
+  let editingSleep = null;
+  function openSleep(sl) {
+    editingSleep = sl ? sl.id : null;
+    $('sleep-sheet-title').textContent = sl ? 'Edit sleep' : 'Add a sleep';
+    const now = roundToMinute(Date.now());
+    $('sleep-start').value = toLocalInput(sl ? sl.start : now - 60 * MIN);
+    $('sleep-end').value = sl ? (sl.end == null ? '' : toLocalInput(sl.end)) : toLocalInput(now);
+    $('sleep-sheet-sub').textContent = 'Leave "Woke up" empty if the baby is still asleep.';
+    $('btn-sleep-save').textContent = sl ? 'Save changes' : 'Save sleep';
+    $('sleep-err').hidden = true;
+    $('sleep-sheet').hidden = false;
+  }
+  const closeSleep = () => { $('sleep-sheet').hidden = true; editingSleep = null; };
+  $('btn-sleep-add').addEventListener('click', () => openSleep(null));
+  $('btn-sleep-cancel').addEventListener('click', closeSleep);
+  $('sleep-sheet').addEventListener('click', (e) => { if (e.target === $('sleep-sheet')) closeSleep(); });
+  $('sleep-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const now = Date.now(); const err = $('sleep-err');
+    const fail = (m) => { err.textContent = m; err.hidden = false; };
+    const st = fromLocalInput($('sleep-start').value);
+    const en = $('sleep-end').value ? fromLocalInput($('sleep-end').value) : null;
+    if (st == null) return fail('Pick when the baby fell asleep.');
+    if (st > now + MIN) return fail('That start time is in the future.');
+    if (en != null && en > now + MIN) return fail('That wake-up time is in the future. Leave it empty if the baby is still asleep.');
+    if (en != null && en <= st) return fail('Woke up has to be after fell asleep.');
+    if (sleepEnd({ end: en }, now) - st > DAY) return fail('That sleep is longer than 24 hours. Check the dates.');
+    const others = state.sleeps.filter((x) => x.id !== editingSleep);
+    if (en == null && others.some((x) => x.end == null)) return fail('Another sleep is still running. Tap Woke up on that one first.');
+    const clash = others.find((x) => st < sleepEnd(x, now) && sleepEnd({ end: en }, now) > x.start);
+    if (clash) return fail(`This overlaps the sleep from ${clock(clash.start)} to ${clash.end == null ? 'now' : clock(clash.end)}. Edit that one instead.`);
+    let sl = state.sleeps.find((x) => x.id === editingSleep);
+    if (sl) { sl.start = st; sl.end = en; } else { sl = { id: makeId(), start: st, end: en }; state.sleeps.push(sl); }
+    pushSleep(sl); saveLocal(); closeSleep(); render();
+    if (fbConfig && !remote && !connecting) connect();
+  });
+
+  // ---------- dashboard ----------
+  function tickHome() {
+    const now = Date.now(); const f = lastFeed();
+    const fc = $('home-feed-card');
+    if (f) {
+      const due = dueTime(); const at = alertTime(); const isDue = now >= at;
+      fc.classList.toggle('is-due', isDue);
+      $('home-feed-label').textContent = isDue ? 'Feed is due' : 'Next feed in';
+      $('home-feed-big').textContent = isDue ? `+${dur(now - due)}` : dur(at - now);
+      $('home-feed-sub').textContent = `Last fed ${clock(f.time)} · ${oz(f.oz)} oz`;
+    }
+    const a = activeSleep(); const wake = lastWake();
+    $('home-sleep-card').classList.toggle('is-asleep', !!a);
+    $('home-sleep-label').textContent = a ? 'Asleep for' : 'Awake for';
+    $('home-sleep-big').textContent = a ? dur(now - a.start) : wake ? dur(now - wake) : '--';
+    $('home-sleep-sub').textContent = a ? `Since ${clock(a.start)}` : wake ? `Woke up ${clock(wake)}` : 'No sleep logged yet';
+  }
+  const hours = (ms) => { const h = ms / 3600000; return h >= 10 ? `${Math.round(h)}h` : `${Math.round(h * 10) / 10}h`; };
+  const chartSel = { oz: null, sleep: null };
+  function barChart(host, cap, key, data, cls, avg) {
+    const W = 320, H = 132, top = 20, bottom = 20, n = data.length, gap = 8;
+    const bw = (W - gap * (n - 1)) / n;
+    const max = Math.max(1e-9, ...data.map((d) => d.value), avg || 0) * 1.12;
+    const y = (v) => top + (H - top - bottom) * (1 - v / max); const base = H - bottom;
+    const sel = chartSel[key] == null ? n - 1 : chartSel[key];
+    let out = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${data.map((d) => d.caption).join('; ')}">`;
+    data.forEach((d, i) => {
+      const x = i * (bw + gap);
+      if (i === sel) out += `<rect class="sel" x="${x - 3}" y="2" width="${bw + 6}" height="${H - 4}" rx="6"/>`;
+      const yt = y(d.value); const h = base - yt; const r = Math.min(4, h, bw / 2);
+      if (d.value > 0) out += `<path class="${cls}" d="M${x},${base}V${yt + r}Q${x},${yt} ${x + r},${yt}H${x + bw - r}Q${x + bw},${yt} ${x + bw},${yt + r}V${base}Z"/>`;
+      if (i === sel) out += `<text class="val" x="${x + bw / 2}" y="${Math.max(12, yt - 5)}" text-anchor="middle">${d.short}</text>`;
+      out += `<text class="ax${i === sel ? ' on' : ''}" x="${x + bw / 2}" y="${H - 5}" text-anchor="middle">${d.label}</text>`;
+    });
+    out += `<line class="base" x1="0" x2="${W}" y1="${base}" y2="${base}"/>`;
+    if (avg) out += `<line class="avg" x1="0" x2="${W}" y1="${y(avg)}" y2="${y(avg)}"/>`;
+    data.forEach((d, i) => { out += `<rect class="hit" data-i="${i}" x="${i * (bw + gap) - gap / 2}" y="0" width="${bw + gap}" height="${H}"/>`; });
+    host.innerHTML = out + '</svg>';
+    cap.textContent = data[sel].caption + (avg ? ' · dashed line is the daily average' : '');
+    host.querySelectorAll('.hit').forEach((r) => {
+      const pick = () => { chartSel[key] = Number(r.dataset.i); barChart(host, cap, key, data, cls, avg); };
+      r.addEventListener('click', pick); r.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') pick(); });
+    });
+  }
+  function renderHome() {
+    const now = Date.now(); const today0 = startOfDay(now); const day0 = now - DAY;
+    $('home-date').textContent = new Date(now).toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+    const todays = state.feeds.filter((x) => x.time >= today0);
+    $('st-oz').textContent = oz(todays.reduce((a, x) => a + x.oz, 0));
+    $('st-feeds').textContent = String(todays.length);
+    const recent = state.feeds.filter((x) => x.time >= day0).sort((a, b) => a.time - b.time);
+    $('st-gap').textContent = recent.length > 1 ? dur((recent[recent.length - 1].time - recent[0].time) / (recent.length - 1)) : '--';
+    const in24 = state.sleeps.map((x) => overlap(x, day0, now, now));
+    $('st-sleep').textContent = dur(in24.reduce((a, b) => a + b, 0));
+    $('st-naps').textContent = String(state.sleeps.filter((x) => x.start >= today0 && isNap(x)).length);
+    const longest = Math.max(0, ...in24);
+    $('st-longest').textContent = longest ? dur(longest) : '--';
+
+    // 24-hour strip: sleep blocks and feed ticks positioned by time
+    const tl = $('timeline'); tl.innerHTML = '';
+    const pct = (t) => `${((t - day0) / DAY) * 100}%`;
+    state.sleeps.filter((x) => sleepEnd(x, now) > day0).forEach((x) => {
+      const el = document.createElement('div'); el.className = 's';
+      const a = Math.max(x.start, day0); el.style.left = pct(a); el.style.width = `${((sleepEnd(x, now) - a) / DAY) * 100}%`;
+      el.title = `Sleep ${clock(x.start)} – ${x.end == null ? 'now' : clock(x.end)} (${dur(sleepEnd(x, now) - x.start)})`;
+      tl.appendChild(el);
+    });
+    state.feeds.filter((x) => x.time > day0).forEach((x) => {
+      const el = document.createElement('div'); el.className = 'f'; el.style.left = pct(x.time);
+      el.title = `Feed ${clock(x.time)} · ${oz(x.oz)} oz`; tl.appendChild(el);
+    });
+    tl.querySelectorAll('div').forEach((el) => el.addEventListener('click', () => { $('timeline-cap').textContent = el.title; }));
+    $('timeline-cap').textContent = 'Tap a block or tick for details.';
+    $('timeline-axis').innerHTML = '';
+    [24, 18, 12, 6, 0].forEach((h) => {
+      const sp = document.createElement('span');
+      sp.textContent = h ? new Date(now - h * 3600000).toLocaleTimeString([], { hour: 'numeric' }) : 'now';
+      $('timeline-axis').appendChild(sp);
+    });
+
+    // Last 7 calendar days, today last
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i);
+      const a = d.getTime(); const e = new Date(d); e.setDate(e.getDate() + 1); const b = e.getTime();
+      const fs = state.feeds.filter((x) => x.time >= a && x.time < b);
+      days.push({ today: i === 0, name: i === 0 ? 'Today' : d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }),
+        label: i === 0 ? 'Today' : d.toLocaleDateString([], { weekday: 'short' }),
+        oz: fs.reduce((s2, x) => s2 + x.oz, 0), feeds: fs.length,
+        sleep: state.sleeps.reduce((s2, x) => s2 + overlap(x, a, b, now), 0) });
+    }
+    // Averages use finished days that have something logged, so a half-done today doesn't drag them down.
+    const avgOf = (k) => { const full = days.filter((d) => !d.today && d[k] > 0); return full.length ? full.reduce((s2, d) => s2 + d[k], 0) / full.length : null; };
+    const ozAvg = avgOf('oz'); const slAvg = avgOf('sleep');
+    $('wk-oz-hero').textContent = ozAvg != null ? `avg ${oz(Math.round(ozAvg * 10) / 10)} oz a day` : '';
+    $('wk-sleep-hero').textContent = slAvg != null ? `avg ${dur(slAvg)} a day` : '';
+    barChart($('wk-oz'), $('wk-oz-cap'), 'oz', days.map((d) => ({ value: d.oz, label: d.label, short: `${oz(Math.round(d.oz * 10) / 10)}`,
+      caption: `${d.name}: ${oz(d.oz)} oz in ${d.feeds} ${d.feeds === 1 ? 'feed' : 'feeds'}` })), 'bar-f', ozAvg);
+    barChart($('wk-sleep'), $('wk-sleep-cap'), 'sleep', days.map((d) => ({ value: d.sleep, label: d.label, short: d.sleep ? hours(d.sleep) : '0',
+      caption: `${d.name}: ${dur(d.sleep)} of sleep${d.today ? ' so far' : ''}` })), 'bar-s', slAvg);
+  }
+  $('home-feed-card').addEventListener('click', () => setTab('feeds'));
+  $('home-sleep-card').addEventListener('click', () => setTab('sleep'));
+  $('home-log-feed').addEventListener('click', () => openFeed(false));
+
+  // ---------- tabs ----------
+  const TAB_KEY = 'feeding-tracker.tab';
+  let tab = ['home', 'feeds', 'sleep'].includes(store.get(TAB_KEY)) ? store.get(TAB_KEY) : 'home';
+  function setTab(t) { tab = t; store.set(TAB_KEY, t); render(); window.scrollTo(0, 0); }
+  document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('click', () => setTab(b.dataset.tab)));
+
   // ---------- render ----------
   const CIRC = 326.73;
   function tick() {
@@ -671,11 +1118,16 @@ input, select {
   }
   function render() {
     const has = state.feeds.length > 0;
-    $('setup').hidden = has; $('clock').hidden = !has; $('history').hidden = !has; $('btn-settings').hidden = !has;
-    $('title').textContent = `${state.name}'s feeds`;
-    $('subtitle').textContent = has ? `Every ${dur(state.intervalMin * MIN)} · snooze ${state.snoozeMin} min` : 'Bottle log and next-feed reminder';
+    $('setup').hidden = has; $('btn-settings').hidden = !has; $('tabs').hidden = !has;
+    ['home', 'feeds', 'sleep'].forEach((t) => { $('view-' + t).hidden = !has || tab !== t; });
+    document.querySelectorAll('.tabs button').forEach((b) => { if (b.dataset.tab === tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+    $('title').textContent = !has ? `${state.name}'s feeds` : { home: `${state.name}'s day`, feeds: `${state.name}'s feeds`, sleep: `${state.name}'s sleep` }[tab];
+    $('subtitle').textContent = !has ? 'Bottle log and next-feed reminder'
+      : tab === 'feeds' ? `Every ${dur(state.intervalMin * MIN)} · snooze ${state.snoozeMin} min`
+      : tab === 'sleep' ? 'One tap when asleep, one tap when awake' : 'Feeding and sleep at a glance';
     if (!has) { $('alert').hidden = true; return; }
-    renderLog(); renderNotif(); renderSync(); tick();
+    renderLog(); renderNotif(); renderSync(); renderSleep(); tick();
+    if (tab === 'home') { renderHome(); tickHome(); }
   }
 
   // Deep links from a notification tap when the app was closed (#fed / #snooze)
@@ -695,8 +1147,14 @@ input, select {
     if (!id || !/^[a-z0-9]{6,40}$/.test(id)) { $('join-err').textContent = 'That doesn\'t look like a share link. Copy it again from Settings on the other phone.'; $('join-err').hidden = false; return; }
     familyId = id; $('join-form').hidden = true; syncState = 'connecting'; render(); connect();
   });
-  setInterval(tick, 1000);
+  let secs = 0;
+  setInterval(() => {
+    if (!state.feeds.length) return;
+    tick(); tickSleep(); secs++;
+    if (tab === 'home') { tickHome(); if (secs % 60 === 0) renderHome(); }
+    if (tab === 'sleep' && secs % 60 === 0) renderSleepLog();
+  }, 1000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeFeed(); closeSettings(); } });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeFeed(); closeSettings(); closeSleep(); } });
 })();
 </script>
