@@ -134,6 +134,8 @@ input, select {
 .note { font-size: .85rem; color: var(--muted); margin: 0; }
 .note.ok { color: var(--ok); }
 .confirm-del { display: flex; gap: 6px; align-items: center; }
+.confirm-clear { display: flex; flex-direction: column; gap: 10px; }
+.undo-bar { background: var(--milk); padding: 14px 18px; gap: 8px; }
 
 /* Sheet */
 .scrim { position: fixed; inset: 0; background: rgb(10 15 25 / .45); display: flex; align-items: flex-end; justify-content: center; z-index: 20; padding: 0 max(12px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(12px, env(safe-area-inset-left, 0px)); }
@@ -227,6 +229,12 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     </div>
     <button class="ghost small" id="btn-settings" type="button">Settings</button>
   </header>
+
+  <!-- Shown to every phone for a day after someone clears all data -->
+  <section class="panel undo-bar" id="undo-bar" hidden role="status">
+    <p class="note" id="undo-text"></p>
+    <div><button type="button" class="small" id="btn-undo">Undo clear</button> <span class="note" id="undo-note"></span></div>
+  </section>
 
   <!-- First run -->
   <section class="panel" id="setup" hidden>
@@ -726,6 +734,12 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
         saveLocal(); render();
         if (!q.metadata.fromCache && !q.metadata.hasPendingWrites) { feedsFresh = true; scheduleReminder(true); }
       }, syncErr);
+      loadUndo();
+      fs.onSnapshot(undoRef(), (snap) => {
+        const d = snap.data();
+        undo = d && Array.isArray(d.feeds) && Array.isArray(d.sleeps) && Array.isArray(d.diapers) ? d : null;
+        keepUndo(); renderUndo();
+      }, () => {}); // older rules without undo/: the copy just stays on the phone that cleared
       Object.keys(RECS).forEach((col) => {
         const k = RECS[col].pending; let resent = false;
         fs.onSnapshot(remote.cols[col], (q) => {
@@ -921,7 +935,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     $('push-note').textContent = '';
     renderPushStatus();
     $('share-note').textContent = '';
-    $('reset-note').textContent = remote ? 'Clears every logged feed, sleep and diaper for everyone sharing this log.' : 'Clears every logged feed, sleep and diaper on this device.';
+    $('reset-note').textContent = (remote ? 'Clears every logged feed, sleep and diaper for everyone sharing this log.' : 'Clears every logged feed, sleep and diaper on this device.') + ' You can undo it for 24 hours.';
     resetIdle();
     $('settings').hidden = false;
   });
@@ -940,17 +954,90 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     save(); closeSettings(); render(); scheduleReminder();
   });
   function resetIdle() { $('reset-zone').innerHTML = '<button type="button" class="small" id="btn-reset">Clear all data</button>'; $('btn-reset').onclick = resetAsk; }
+  // Clearing asks for a typed DELETE, saves a copy of everything first, tells everyone who did it,
+  // and can be undone from any phone for a day. The copy lives in families/{id}/undo/latest when
+  // shared (on this phone otherwise); a newer clear replaces it and it is dropped after a day.
+  const UNDO_WORD = 'DELETE';
+  const undoKey = () => `feeding-tracker.undo.${familyId || 'local'}`;
+  let undo = null; // { feeds, sleeps, diapers, name, intervalMin, snoozeMin, clearedAt, by }
+  const loadUndo = () => { try { undo = JSON.parse(store.get(undoKey()) || 'null'); } catch (e) { undo = null; } };
+  const keepUndo = () => store.set(undoKey(), undo ? JSON.stringify(undo) : '');
+  const undoRef = () => remote.fs.doc(remote.famRef, 'undo', 'latest');
+  const undoLive = () => !!(undo && undo.clearedAt && Date.now() < undo.clearedAt + DAY);
+  const countLabel = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  const contents = (u) => [countLabel(u.feeds.length, 'feed', 'feeds'), countLabel(u.sleeps.length, 'sleep', 'sleeps'), countLabel(u.diapers.length, 'diaper change', 'diaper changes')].join(', ');
+  const when = (ms) => { const k = dayKey(ms); const day = k === dayKey(Date.now()) ? 'today' : k === dayKey(Date.now() + DAY) ? 'tomorrow' : k === dayKey(Date.now() - DAY) ? 'yesterday' : dayLabel(ms); return `${day} at ${clock(ms)}`; };
+  const within = (p, ms) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error('timeout')), ms))]);
+  loadUndo();
+
   function resetAsk() {
-    $('reset-zone').innerHTML = '<div class="confirm-del"><span class="note">Delete every feed, sleep and diaper?</span><button type="button" class="small due" id="btn-reset-yes">Delete all</button><button type="button" class="small" id="btn-reset-no">Keep</button></div>';
-    $('btn-reset-yes').onclick = () => {
-      state.feeds.forEach((f) => removeFeed(f.id));
-      state.sleeps.forEach((x) => removeSleep(x.id));
-      state.diapers.forEach((x) => removeDiaper(x.id));
-      const sound = state.sound; state = blank(); state.sound = sound;
-      save(); closeSettings(); render(); scheduleReminder();
-    };
+    const me = (store.get(ME_KEY) || '').trim();
+    $('reset-zone').innerHTML = `<div class="confirm-clear">
+      <p class="note"><strong></strong></p>
+      ${remote ? '<label class="field"><span>Your name (everyone is told who cleared it)</span><input id="reset-me" type="text" maxlength="30" autocomplete="off" placeholder="e.g. Mom"></label>' : ''}
+      <label class="field"><span>Type ${UNDO_WORD} to confirm</span><input id="reset-word" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false"></label>
+      <p class="err" id="reset-err" hidden></p>
+      <div class="row"><button type="button" class="small due" id="btn-reset-yes" disabled>Delete all</button><button type="button" class="small" id="btn-reset-no">Keep</button></div></div>`;
+    $('reset-zone').querySelector('strong').textContent = `This deletes ${contents(state)}${remote ? ' for everyone sharing this log' : ''}.`;
+    if ($('reset-me')) $('reset-me').value = me;
+    const ready = () => $('reset-word').value.trim().toUpperCase() === UNDO_WORD && (!$('reset-me') || $('reset-me').value.trim());
+    $('reset-zone').querySelectorAll('input').forEach((i) => {
+      i.oninput = () => { $('btn-reset-yes').disabled = !ready(); };
+      i.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); if (ready()) $('btn-reset-yes').click(); } }; // don't submit the settings form
+    });
+    $('btn-reset-yes').onclick = () => { if (ready()) clearAll($('reset-me') ? $('reset-me').value.trim().slice(0, 30) : me); };
     $('btn-reset-no').onclick = resetIdle;
+    $('reset-word').focus();
   }
+  async function clearAll(me) {
+    const err = $('reset-err'); err.hidden = true;
+    $('btn-reset-yes').disabled = true; $('btn-reset-yes').textContent = 'Saving a copy...';
+    const copy = JSON.parse(JSON.stringify({ feeds: state.feeds, sleeps: state.sleeps, diapers: state.diapers,
+      name: state.name, intervalMin: state.intervalMin, snoozeMin: state.snoozeMin, clearedAt: Date.now(), by: me }));
+    if (remote) {
+      store.set(ME_KEY, me); $('set-me').value = me;
+      // Nothing is deleted until the family log has confirmed it holds the undo copy.
+      try { await within(remote.fs.setDoc(undoRef(), copy), 15000); } catch (e) {
+        if (e.message === 'timeout') remote.fs.deleteDoc(undoRef()).catch(() => {}); // don't leave a copy behind for a clear that never happened
+        err.textContent = e.message === 'timeout' ? 'Couldn\'t reach the family log, so nothing was deleted. Try again when you have a connection.'
+          : 'The family log wouldn\'t save an undo copy, so nothing was deleted. If the app was just updated, re-publish the Firestore rules.';
+        err.hidden = false; $('btn-reset-yes').textContent = 'Delete all'; $('btn-reset-yes').disabled = false; return;
+      }
+    }
+    undo = copy; keepUndo();
+    state.feeds.forEach((f) => removeFeed(f.id));
+    state.sleeps.forEach((x) => removeSleep(x.id));
+    state.diapers.forEach((x) => removeDiaper(x.id));
+    const sound = state.sound; state = blank(); state.sound = sound;
+    announce(`clear-${copy.clearedAt}`, 'All data cleared', `${contents(copy)} were deleted. Anyone can undo this from the app for 24 hours.`, 'warning');
+    save(); closeSettings(); render(); scheduleReminder();
+  }
+  function restoreAll() {
+    if (!undoLive()) return;
+    const u = undo; const has = (list, id) => list.some((x) => x.id === id);
+    u.feeds.forEach((f) => { if (!has(state.feeds, f.id)) { state.feeds.push(f); pushFeed(f); } });
+    u.sleeps.forEach((x) => { if (!has(state.sleeps, x.id)) { state.sleeps.push(x); pushSleep(x); } });
+    u.diapers.forEach((x) => { if (!has(state.diapers, x.id)) { state.diapers.push(x); pushDiaper(x); } });
+    if (u.name) state.name = u.name;
+    if (u.intervalMin >= 15) state.intervalMin = u.intervalMin;
+    if (u.snoozeMin) state.snoozeMin = u.snoozeMin;
+    undo = null; keepUndo();
+    if (remote) remote.fs.deleteDoc(undoRef()).catch(() => {});
+    // Same sequence ID as the clear notification, so it replaces that one on everyone's phone.
+    announce(`clear-${u.clearedAt}`, 'Cleared data restored', `${contents(u)} are back in the log.`, 'leftwards_arrow_with_hook');
+    state.alertedFor = null; save(); render(); scheduleReminder();
+  }
+  function renderUndo() {
+    if (undo && !undoLive()) { // a day has passed: the clear is final
+      undo = null; keepUndo();
+      if (remote) remote.fs.deleteDoc(undoRef()).catch(() => {});
+    }
+    $('undo-bar').hidden = !undo;
+    if (!undo) return;
+    const until = undo.clearedAt + DAY;
+    $('undo-text').textContent = `All data was cleared${undo.by ? ` by ${undo.by}` : ''} ${when(undo.clearedAt)} (${contents(undo)}). You can bring it back until ${when(until)}.`;
+  }
+  $('btn-undo').addEventListener('click', restoreAll);
 
   $('btn-share').addEventListener('click', async () => {
     const url = shareUrl();
@@ -1513,7 +1600,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
       : tab === 'diaper' ? 'One tap per change, details if you want them' : 'Feeds, sleep and diapers at a glance';
     if (!has) $('alert').hidden = true;
     else { renderLog(); renderNotif(); renderSync(); tick(); }
-    renderSleep(); renderDiaper(); applyLocks();
+    renderSleep(); renderDiaper(); applyLocks(); renderUndo();
     if (tab === 'home') { renderHome(); tickHome(); }
   }
 
