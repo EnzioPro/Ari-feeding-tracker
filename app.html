@@ -546,6 +546,11 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
       <p class="note">Everyone subscribed gets a notification whenever a feed, sleep or diaper is logged, edited or deleted, plus the next-feed reminder when it's due.</p>
       <label class="field"><span>Your name on this phone (optional, shown in those notifications)</span><input id="set-me" type="text" maxlength="30" autocomplete="off" placeholder="e.g. Mom"></label>
     </div>
+    <div class="panel" style="background:var(--milk)" id="leave-panel" hidden>
+      <span class="label">Leave this family</span>
+      <p class="note">Stops sharing on this phone only. Everyone else keeps the shared log.</p>
+      <div id="leave-zone"><button type="button" class="small" id="btn-leave">Leave family</button></div>
+    </div>
     <div class="panel" style="background:var(--milk)">
       <span class="label">Start over</span>
       <p class="note" id="reset-note">Clears every logged feed, sleep and diaper on this device.</p>
@@ -581,6 +586,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
   // families/{id} (settings) and families/{id}/feeds/{feedId}, shared by everyone
   // who opens the ?family=<id> link. Without a config the app stays on-device only.
   const FAMILY_KEY = 'feeding-tracker.family';
+  const LEFT_KEY = 'feeding-tracker.left';
   const FB = 'https://www.gstatic.com/firebasejs/10.12.2/';
   const fbConfig = window.FEEDS_FIREBASE_CONFIG && window.FEEDS_FIREBASE_CONFIG.projectId ? window.FEEDS_FIREBASE_CONFIG : null;
   let remote = null;
@@ -588,8 +594,10 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
   const store = { get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
   const newId = () => Array.from(crypto.getRandomValues(new Uint8Array(9)), (b) => b.toString(36).padStart(2, '0')).join('').slice(0, 14);
   let familyId = null;
+  let leftLink = null;
   if (fbConfig) {
-    const fromUrl = new URLSearchParams(location.search).get('family');
+    let fromUrl = new URLSearchParams(location.search).get('family');
+    if (fromUrl && fromUrl === store.get(LEFT_KEY) && !store.get(FAMILY_KEY)) { leftLink = location.href; fromUrl = null; } // e.g. a home-screen icon still pointing at a family this phone left
     familyId = (fromUrl && /^[a-z0-9]{6,40}$/.test(fromUrl) ? fromUrl : null) || store.get(FAMILY_KEY);
     if (familyId && familyId !== store.get(FAMILY_KEY) && fromUrl) { state.feeds = []; state.sleeps = []; state.sleepUnsynced = []; state.diapers = []; state.diaperUnsynced = []; } // joined someone else's log
   }
@@ -931,6 +939,8 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     $('share-note').textContent = '';
     $('reset-note').textContent = (remote ? 'Clears every logged feed, sleep and diaper for everyone sharing this log.' : 'Clears every logged feed, sleep and diaper on this device.') + ' You can undo it for 24 hours.';
     resetIdle();
+    $('leave-panel').hidden = !familyId;
+    leaveIdle();
     $('settings').hidden = false;
   });
   const closeSettings = () => { $('settings').hidden = true; };
@@ -947,6 +957,29 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     state.alertedFor = null;
     save(); closeSettings(); render(); scheduleReminder();
   });
+  // Leaving only disconnects this phone: the shared log, the other phones and the family's ntfy topic
+  // are untouched (the reminder already booked there is shared, so it is not cancelled). This phone forgets
+  // the family, stops booking reminders and starts again with an empty local log.
+  function leaveIdle() { $('leave-zone').innerHTML = '<button type="button" class="small" id="btn-leave">Leave family</button>'; $('btn-leave').onclick = leaveAsk; }
+  function leaveAsk() {
+    const unsynced = state.sleepUnsynced.length + state.diaperUnsynced.length;
+    $('leave-zone').innerHTML = `<div class="confirm-clear">
+      <p class="note"><strong>Leave the family log on this phone?</strong></p>
+      <p class="note">This phone stops syncing and stops booking feeding reminders, and its copy of the log is cleared. Nothing is deleted for anyone else. To stop notifications too, unsubscribe from the topic in the ntfy app. You can rejoin later by pasting the share link.</p>
+      ${unsynced ? `<p class="err">${countLabel(unsynced, 'entry hasn\'t', 'entries haven\'t')} reached the family log yet and will be lost.</p>` : ''}
+      <div class="row"><button type="button" class="small due" id="btn-leave-yes">Leave</button><button type="button" class="small" id="btn-leave-no">Stay</button></div></div>`;
+    $('btn-leave-yes').onclick = leaveFamily;
+    $('btn-leave-no').onclick = leaveIdle;
+  }
+  function leaveFamily() {
+    store.set(LEFT_KEY, familyId);
+    store.set(undoKey(), '');
+    store.set(FAMILY_KEY, ''); store.set(BOOKED_KEY, '');
+    Object.assign(state, { feeds: [], sleeps: [], sleepUnsynced: [], diapers: [], diaperUnsynced: [], snoozeUntil: null, alertedFor: null });
+    saveLocal();
+    // A fresh load drops the Firestore listeners and the family share link in one go.
+    location.replace(location.pathname);
+  }
   function resetIdle() { $('reset-zone').innerHTML = '<button type="button" class="small" id="btn-reset">Clear all data</button>'; $('btn-reset').onclick = resetAsk; }
   // Clearing asks for a typed DELETE, saves a copy of everything first, tells everyone who did it,
   // and can be undone from any phone for a day. The copy lives in families/{id}/undo/latest when
@@ -1606,13 +1639,14 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
   }
   if (fbConfig && (familyId || state.feeds.length || state.sleeps.length || state.diapers.length)) connect();
-  else if (fbConfig) { syncState = 'off'; $('join-form').hidden = false; }
+  else if (fbConfig) { syncState = 'off'; $('join-form').hidden = false; if (leftLink) $('join-link').value = leftLink; }
   $('join-form').addEventListener('submit', (e) => {
     e.preventDefault();
     let id = null;
     const v = $('join-link').value.trim();
     try { id = new URL(v).searchParams.get('family'); } catch (err) { id = v; }
     if (!id || !/^[a-z0-9]{6,40}$/.test(id)) { $('join-err').textContent = 'That doesn\'t look like a share link. Copy it again from Settings on the other phone.'; $('join-err').hidden = false; return; }
+    store.set(LEFT_KEY, '');
     familyId = id; $('join-form').hidden = true; syncState = 'connecting'; render(); connect();
   });
   let secs = 0;
