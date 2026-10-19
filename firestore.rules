@@ -22,6 +22,13 @@ service cloud.firestore {
                               && request.resource.data.kind in ['pee', 'poo', 'both', 'dry']
                               && request.resource.data.note is string && request.resource.data.note.size() <= 200;
       }
+      // One copy of the log from the last "Clear all data", kept so anyone can undo it for a day.
+      match /undo/{docId} {
+        allow read, delete: if docId == 'latest';
+        allow create, update: if docId == 'latest' && request.resource.data.clearedAt is number
+                              && request.resource.data.feeds is list && request.resource.data.sleeps is list
+                              && request.resource.data.diapers is list;
+      }
     }
   }
 }

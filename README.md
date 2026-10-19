@@ -33,7 +33,7 @@ Reminders fire while the app is open or in the background; browsers can't wake a
 3. Project settings → General → Your apps → add a Web app, and copy its config values into `firebase-config.js`.
 4. Open the app, go to Settings → Copy share link, and send that link to family. Everyone on that link sees the same feeds, sleeps, countdown, snoozes and reminders.
 
-Whenever `firestore.rules` changes (sleep and diaper tracking each added rules), paste it into the Rules tab again and publish,
+Whenever `firestore.rules` changes (sleep tracking, diaper tracking and the undo for Clear all data each added rules), paste it into the Rules tab again and publish,
 so the shared log accepts the new records. Until then they stay on the phone that logged them and upload once the rules allow it.
 
 The link (`?family=<id>`) is the only key to the log, so share it only with people who should see it.
