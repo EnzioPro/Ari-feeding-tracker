@@ -533,7 +533,8 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     <div class="panel" style="background:var(--milk)" id="push-zone" hidden>
       <span class="label">Phone notifications, even when the app is closed</span>
       <p class="note">Install the free <strong>ntfy</strong> app (App Store or Google Play), tap <strong>+</strong>, and subscribe to this topic. Keep the server as ntfy.sh.</p>
-      <div><code class="num" id="push-topic"></code> <button type="button" class="small" id="btn-push-copy">Copy topic</button> <span class="note" id="push-note"></span></div>
+      <div><code class="num" id="push-topic"></code> <button type="button" class="small" id="btn-push-copy">Copy topic</button> <button type="button" class="small" id="btn-push-test">Send test</button> <span class="note" id="push-note"></span></div>
+      <p class="note" id="push-status"></p>
       <p class="note">Everyone subscribed gets a notification whenever a feed, sleep or diaper is logged, edited or deleted, plus the next-feed reminder when it's due.</p>
       <label class="field"><span>Your name on this phone (optional, shown in those notifications)</span><input id="set-me" type="text" maxlength="30" autocomplete="off" placeholder="e.g. Mom"></label>
     </div>
@@ -598,15 +599,36 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
   const NTFY = 'https://ntfy.sh/';
   const pushTopic = () => (familyId ? `ari-feeds-${familyId}` : null);
   const ascii = (t) => t.replace(/[^\x20-\x7e]/g, '');
-  function scheduleReminder() {
+  // The booking is re-checked whenever this phone sees the latest log, so a request that failed
+  // (no signal, app closed too fast) is retried instead of silently leaving no reminder.
+  // A due time that has already passed is left alone: deleting it would also clear the
+  // reminder that ntfy just delivered to everyone's phones.
+  const BOOKED_KEY = 'feeding-tracker.booked';
+  let pushStatus = '';
+  function scheduleReminder(onlyIfChanged) {
     const topic = pushTopic(); if (!topic) return;
     const url = `${NTFY}${topic}/next-feed`;
     const at = state.feeds.length ? alertTime() : null;
-    if (at == null || at < Date.now() + 15000) { fetch(url, { method: 'DELETE' }).catch(() => {}); return; }
+    if (at == null) { if (!onlyIfChanged) fetch(url, { method: 'DELETE' }).catch(() => {}); store.set(BOOKED_KEY, ''); return; }
+    if (at < Date.now() + 15000) return;
     const f = lastFeed(); const link = shareUrl();
+    const key = `${topic}|${at}|${f.id}|${state.name}|${state.snoozeMin}`;
+    if (onlyIfChanged && store.get(BOOKED_KEY) === key) return;
     fetch(url, { method: 'POST', body: `Last fed ${clock(f.time)} (${oz(f.oz)} oz). Tap to log the feed.`,
       headers: { At: String(Math.round(at / 1000)), Title: ascii(`Time to feed ${state.name}`), Priority: 'high', Tags: 'baby_bottle',
-        Click: `${link}#fed`, Actions: `view, Fed, ${link}#fed; view, Snooze ${state.snoozeMin} min, ${link}#snooze` } }).catch(() => {});
+        Click: `${link}#fed`, Actions: `view, Fed, ${link}#fed; view, Snooze ${state.snoozeMin} min, ${link}#snooze` } })
+      .then((r) => { if (!r.ok) throw new Error(r.status); store.set(BOOKED_KEY, key); pushStatus = `Next reminder is booked for ${clock(at)}.`; })
+      .catch(() => { store.set(BOOKED_KEY, ''); pushStatus = 'Couldn\'t reach ntfy to book the next reminder. It will retry when the app is opened again.'; })
+      .finally(renderPushStatus);
+  }
+  function renderPushStatus() { const el = $('push-status'); if (el) { el.textContent = pushStatus; el.className = /booked/.test(pushStatus) ? 'note ok' : 'note'; } }
+  function sendTestPush() {
+    const topic = pushTopic(); if (!topic) return;
+    $('push-note').textContent = 'Sending...';
+    fetch(`${NTFY}${topic}/test`, { method: 'POST', body: 'If you can see this, feeding reminders will reach this phone.',
+      headers: { Title: 'Test notification', Priority: 'high', Tags: 'bell', Click: shareUrl() } })
+      .then((r) => { if (!r.ok) throw new Error(r.status); $('push-note').textContent = 'Sent. It should show up on every subscribed phone within a few seconds.'; })
+      .catch(() => { $('push-note').textContent = 'Couldn\'t reach ntfy from this phone. Check the internet connection and try again.'; });
   }
   // Every log also goes out right away to everyone subscribed. Each record's id is its ntfy sequence ID,
   // so adding details or editing replaces that record's notification instead of stacking a new one.
@@ -659,6 +681,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
   const removeDiaper = (id) => removeRec('diapers', id);
   let connecting = false;
   let pendingAction = null;
+  let feedsFresh = false;
   async function connect() {
     connecting = true;
     try {
@@ -688,12 +711,14 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
         }
         syncState = snap.metadata.fromCache ? 'offline' : 'live';
         saveLocal(); render();
+        if (feedsFresh && !snap.metadata.fromCache && !snap.metadata.hasPendingWrites) scheduleReminder(true); // snooze or settings changed on another phone
         if (pendingAction) { const a = pendingAction; pendingAction = null; setTimeout(() => handleAction(a), 300); }
       }, syncErr);
       fs.onSnapshot(feedsCol, { includeMetadataChanges: true }, (q) => {
         state.feeds = q.docs.map((d) => ({ id: d.id, time: d.data().time, oz: d.data().oz }));
         syncState = q.metadata.fromCache ? 'offline' : 'live';
         saveLocal(); render();
+        if (!q.metadata.fromCache && !q.metadata.hasPendingWrites) { feedsFresh = true; scheduleReminder(true); }
       }, syncErr);
       Object.keys(RECS).forEach((col) => {
         const k = RECS[col].pending; let resent = false;
@@ -888,6 +913,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     $('push-topic').textContent = pushTopic() || '';
     $('set-me').value = store.get(ME_KEY) || '';
     $('push-note').textContent = '';
+    renderPushStatus();
     $('share-note').textContent = '';
     $('reset-note').textContent = remote ? 'Clears every logged feed, sleep and diaper for everyone sharing this log.' : 'Clears every logged feed, sleep and diaper on this device.';
     resetIdle();
@@ -927,6 +953,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
       await navigator.clipboard.writeText(url); $('share-note').textContent = 'Link copied.';
     } catch (e) { $('share-note').textContent = url; }
   });
+  $('btn-push-test').addEventListener('click', sendTestPush);
   $('btn-push-copy').addEventListener('click', async () => {
     try { await navigator.clipboard.writeText(pushTopic()); $('push-note').textContent = 'Copied.'; } catch (e) { $('push-note').textContent = 'Press and hold the topic to copy it.'; }
   });
