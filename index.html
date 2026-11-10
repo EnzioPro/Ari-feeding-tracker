@@ -6,228 +6,362 @@
 </head><body>
 <title>Ari's Feeding Clock</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="theme-color" content="#2f4a8a">
+<meta name="theme-color" content="#2f5fc4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* Layout: one narrow column, a clock face up top, actions under it, the day's feeds as a log below. */
+/* Layout: one narrow column of soft cards; a floating tab bar with a quick-log button at the bottom. */
 :root {
-  --bg: #eef3f8;
+  --bg: #f3f5fa;
+  --bg-glow: #e4ebfb;
   --surface: #ffffff;
-  --ink: #1b2536;
-  --muted: #5d6b82;
-  --line: #d6dfeb;
+  --surface-2: #f6f8fc;
+  --ink: #141b2b;
+  --muted: #5f6b80;
+  --faint: #8a94a8;
+  --line: #e3e8f1;
+  --grid: #edf0f6;
   --accent: #2f5fc4;
+  --accent-2: #5b4fd6;
   --accent-ink: #ffffff;
-  --accent-soft: #dce7fb;
-  --milk: #f6f9fd;
+  --accent-soft: #e3ebfc;
+  --milk: #f6f8fc;
   --due: #c2410c;
-  --due-soft: #fde8dc;
+  --due-soft: #fdebe1;
   --ok: #1f7a4d;
+  --ok-soft: #e1f3e9;
   --sleep: #0e8b78;
   --sleep-ink: #ffffff;
-  --sleep-soft: #d9f1ec;
+  --sleep-soft: #dcf2ee;
   --feed-mark: #2f5fc4;
   --sleep-mark: #0e8b78;
   --diaper: #a8650a;
   --diaper-ink: #ffffff;
-  --diaper-soft: #f7ead5;
+  --diaper-soft: #f8ecd9;
   --diaper-mark: #a8650a;
-  --font-display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
-  --font-body: "Nunito Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --radius: 14px;
+  --shadow: 0 1px 2px rgb(20 27 43 / .04), 0 6px 24px -8px rgb(20 27 43 / .10);
+  --shadow-lg: 0 10px 40px -10px rgb(20 27 43 / .28);
+  --glass: rgb(255 255 255 / .78);
+  --font-display: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --radius: 20px;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0f1522; --surface: #182133; --ink: #e6ecf6; --muted: #9aa8bf; --line: #2a3650;
-    --accent: #7ea6ff; --accent-ink: #0f1522; --accent-soft: #233456; --milk: #1d283d;
-    --due: #ff9a62; --due-soft: #3a2418; --ok: #5fd39a; color-scheme: dark;
-    --sleep: #46c9b1; --sleep-ink: #0f1522; --sleep-soft: #173a3a; --feed-mark: #5a86e6; --sleep-mark: #1f9a85;
-    --diaper: #e0a84f; --diaper-ink: #0f1522; --diaper-soft: #3a2e18; --diaper-mark: #bf8420;
+    --bg: #0b0f1a; --bg-glow: #141c33; --surface: #161c2c; --surface-2: #1c2337; --ink: #e8edf7; --muted: #9ba7bd; --faint: #6f7a90;
+    --line: #262f45; --grid: #212a3e; --accent: #7ea6ff; --accent-2: #a79bff; --accent-ink: #0b0f1a; --accent-soft: #1f2c4d; --milk: #1c2337;
+    --due: #ff9a62; --due-soft: #3a2418; --ok: #5fd39a; --ok-soft: #173326; color-scheme: dark;
+    --sleep: #46c9b1; --sleep-ink: #0b0f1a; --sleep-soft: #143533; --feed-mark: #5a86e6; --sleep-mark: #1f9a85;
+    --diaper: #e0a84f; --diaper-ink: #0b0f1a; --diaper-soft: #372b17; --diaper-mark: #bf8420;
+    --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 24px -10px rgb(0 0 0 / .5); --shadow-lg: 0 12px 40px -8px rgb(0 0 0 / .7); --glass: rgb(22 28 44 / .8);
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0f1522; --surface: #182133; --ink: #e6ecf6; --muted: #9aa8bf; --line: #2a3650;
-  --accent: #7ea6ff; --accent-ink: #0f1522; --accent-soft: #233456; --milk: #1d283d;
-  --due: #ff9a62; --due-soft: #3a2418; --ok: #5fd39a; color-scheme: dark;
-  --sleep: #46c9b1; --sleep-ink: #0f1522; --sleep-soft: #173a3a; --feed-mark: #5a86e6; --sleep-mark: #1f9a85;
-    --diaper: #e0a84f; --diaper-ink: #0f1522; --diaper-soft: #3a2e18; --diaper-mark: #bf8420;
+  --bg: #0b0f1a; --bg-glow: #141c33; --surface: #161c2c; --surface-2: #1c2337; --ink: #e8edf7; --muted: #9ba7bd; --faint: #6f7a90;
+  --line: #262f45; --grid: #212a3e; --accent: #7ea6ff; --accent-2: #a79bff; --accent-ink: #0b0f1a; --accent-soft: #1f2c4d; --milk: #1c2337;
+  --due: #ff9a62; --due-soft: #3a2418; --ok: #5fd39a; --ok-soft: #173326; color-scheme: dark;
+  --sleep: #46c9b1; --sleep-ink: #0b0f1a; --sleep-soft: #143533; --feed-mark: #5a86e6; --sleep-mark: #1f9a85;
+  --diaper: #e0a84f; --diaper-ink: #0b0f1a; --diaper-soft: #372b17; --diaper-mark: #bf8420;
+  --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 24px -10px rgb(0 0 0 / .5); --shadow-lg: 0 12px 40px -8px rgb(0 0 0 / .7); --glass: rgb(22 28 44 / .8);
 }
 * { box-sizing: border-box; }
 body {
-  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.45;
+  background: radial-gradient(120% 60% at 50% -10%, var(--bg-glow), transparent 70%) no-repeat, var(--bg);
+  min-height: 100vh;
+  color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.45; -webkit-font-smoothing: antialiased;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 20px calc(96px + env(safe-area-inset-bottom, 0px));
+  padding-block: 18px calc(112px + env(safe-area-inset-bottom, 0px));
+  -webkit-tap-highlight-color: transparent;
 }
-main { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
-h1, h2 { font-family: var(--font-display); font-weight: 700; margin: 0; text-wrap: balance; line-height: 1.1; }
-h1 { font-size: 1.6rem; }
-h2 { font-size: 1.15rem; }
+main { max-width: 540px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.view { display: flex; flex-direction: column; gap: 16px; }
+.view[hidden] { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .view:not([hidden]) { animation: rise .35s cubic-bezier(.2, .8, .2, 1); }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+}
+h1, h2 { font-family: var(--font-display); font-weight: 800; margin: 0; text-wrap: balance; line-height: 1.15; letter-spacing: -.02em; }
+h1 { font-size: 1.65rem; }
+h2 { font-size: 1.1rem; font-weight: 700; letter-spacing: -.01em; }
 .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .sub { color: var(--muted); font-size: .9rem; margin: 2px 0 0; }
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; display: flex; flex-direction: column; gap: 14px; }
-.label { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; }
+.hello { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.avatar { width: 44px; height: 44px; flex: none; border-radius: 14px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 1.2rem;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 6px 16px -6px var(--accent); }
+.hello .eyebrow { font-size: .8rem; font-weight: 600; color: var(--muted); }
+.icon-btn { width: 44px; height: 44px; min-height: 44px; padding: 0; border-radius: 14px; display: grid; place-items: center; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); color: var(--muted); }
+.icon-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: .75rem; font-weight: 700; color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px 3px 8px; }
+.pill i { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); }
+.pill.live i { background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); }
+.pill.warn i { background: var(--due); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; display: flex; flex-direction: column; gap: 14px; box-shadow: var(--shadow); }
+.label { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; }
 .num { font-variant-numeric: tabular-nums; }
 button, .btn {
-  font: inherit; font-weight: 700; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
-  padding: 11px 18px; cursor: pointer; min-height: 44px;
+  font: inherit; font-weight: 700; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  padding: 11px 18px; cursor: pointer; min-height: 44px; transition: transform .12s ease, background-color .2s, box-shadow .2s, opacity .2s;
 }
+button:active:not(:disabled) { transform: scale(.97); }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-button.diaper { background: var(--diaper); border-color: var(--diaper); color: var(--diaper-ink); }
-button.sleep { background: var(--sleep); border-color: var(--sleep); color: var(--sleep-ink); }
-button:disabled { opacity: .45; cursor: default; }
+button.primary { background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, var(--accent-2))); border-color: transparent; color: var(--accent-ink); box-shadow: 0 6px 16px -8px var(--accent); }
+button.diaper { background: var(--diaper); border-color: transparent; color: var(--diaper-ink); box-shadow: 0 6px 16px -10px var(--diaper); }
+button.sleep { background: var(--sleep); border-color: transparent; color: var(--sleep-ink); box-shadow: 0 6px 16px -10px var(--sleep); }
+button:disabled { opacity: .45; cursor: default; box-shadow: none; }
 button.due { background: var(--due); border-color: var(--due); color: #fff; }
-button.ghost { background: transparent; border-color: transparent; color: var(--muted); padding-inline: 10px; }
-button.small { min-height: 34px; padding: 6px 12px; font-size: .85rem; }
+button.ghost { background: transparent; border-color: transparent; color: var(--muted); padding-inline: 10px; box-shadow: none; }
+button.small { min-height: 36px; padding: 6px 12px; font-size: .85rem; border-radius: 11px; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; }
 .row > * { flex: 1 1 140px; }
 .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .field span { font-size: .85rem; font-weight: 600; color: var(--muted); }
 input, select {
-  font: inherit; color: var(--ink); background: var(--milk); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-height: 44px; width: 100%;
+  font: inherit; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; min-height: 46px; width: 100%;
 }
 .oz-wrap { position: relative; }
 .oz-wrap input { padding-right: 40px; }
 .oz-wrap::after { content: "oz"; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-weight: 600; pointer-events: none; }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
-.chips button { min-height: 34px; padding: 4px 12px; font-size: .9rem; background: var(--accent-soft); border-color: transparent; color: var(--ink); }
+.chips button { min-height: 36px; padding: 4px 13px; font-size: .88rem; background: var(--accent-soft); border-color: transparent; color: var(--ink); border-radius: 999px; }
 
 /* Clock face */
-.clock { display: grid; grid-template-columns: 150px 1fr; gap: 18px; align-items: center; }
-@media (max-width: 380px) { .clock { grid-template-columns: 1fr; justify-items: center; text-align: center; } }
-.ring { width: 150px; height: 150px; position: relative; max-width: 100%; }
-.ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-.ring .track { fill: none; stroke: var(--accent-soft); stroke-width: 12; }
-.ring .fill { fill: none; stroke: var(--accent); stroke-width: 12; stroke-linecap: round; transition: stroke-dashoffset .6s ease; }
+.clock { display: grid; grid-template-columns: 168px 1fr; gap: 20px; align-items: center; }
+@media (max-width: 400px) { .clock { grid-template-columns: 1fr; justify-items: center; text-align: center; } }
+.ring { width: 168px; height: 168px; position: relative; max-width: 100%; }
+.ring svg { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+.ring .track { fill: none; stroke: var(--accent-soft); stroke-width: 11; }
+.ring .fill { fill: none; stroke: url(#ring-grad); stroke-width: 11; stroke-linecap: round; transition: stroke-dashoffset .6s ease; }
 .ring.is-due .fill { stroke: var(--due); }
 .ring.is-due .track { stroke: var(--due-soft); }
 .ring .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.ring .bottle { font-family: var(--font-display); font-size: 1.9rem; font-weight: 700; line-height: 1; }
-.ring .bottle-sub { font-size: .75rem; color: var(--muted); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
-.countdown { font-family: var(--font-display); font-size: 2.6rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.ring .bottle { font-family: var(--font-display); font-size: 2.1rem; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
+.ring .bottle-sub { font-size: .7rem; color: var(--muted); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-top: 4px; }
+.countdown { font-family: var(--font-display); font-size: 2.7rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.03em; }
 .countdown.due { color: var(--due); }
-.facts { display: flex; flex-direction: column; gap: 4px; }
-.facts p { margin: 0; color: var(--muted); }
+.facts { display: flex; flex-direction: column; gap: 6px; }
+.facts p { margin: 0; color: var(--muted); font-size: .92rem; }
 .facts strong { color: var(--ink); }
 
 /* Due alert */
-.alert { background: var(--due-soft); border: 2px solid var(--due); border-radius: var(--radius); padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.alert { background: var(--due-soft); border: 1.5px solid var(--due); border-radius: var(--radius); padding: 18px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow); }
 .alert h2 { color: var(--due); font-size: 1.4rem; }
 .alert p { margin: 0; }
 @media (prefers-reduced-motion: no-preference) {
   .alert { animation: nudge 2.4s ease-in-out infinite; }
-  @keyframes nudge { 0%, 100% { box-shadow: 0 0 0 0 transparent; } 50% { box-shadow: 0 0 0 6px var(--due-soft); } }
+  @keyframes nudge { 0%, 100% { box-shadow: 0 0 0 0 transparent; } 50% { box-shadow: 0 0 0 7px var(--due-soft); } }
 }
 
-/* Log */
-.day { display: flex; flex-direction: column; gap: 4px; }
-.day-head { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0 4px; border-bottom: 1px solid var(--line); }
-.day-head h3 { margin: 0; font-size: .95rem; }
-.day-head .total { font-size: .85rem; color: var(--muted); font-weight: 700; }
-.entry { display: grid; grid-template-columns: 5.5em 4em 1fr auto; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px dashed var(--line); }
-.entry:last-child { border-bottom: 0; }
+/* Logs */
+.day { display: flex; flex-direction: column; gap: 6px; }
+.day + .day { margin-top: 10px; }
+.day-head { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 2px; }
+.day-head h3 { margin: 0; font-size: .8rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.day-head .total { font-size: .82rem; color: var(--muted); font-weight: 700; }
+.entry, .sentry { position: relative; background: var(--surface-2); border-radius: 14px; padding: 8px 8px 8px 16px; }
+.entry::before, .sentry::before { content: ""; position: absolute; left: 6px; top: 10px; bottom: 10px; width: 4px; border-radius: 2px; background: var(--feed-mark); }
+#sleep-log .sentry::before { background: var(--sleep-mark); }
+#diaper-log .sentry::before { background: var(--diaper-mark); }
+.entry { display: grid; grid-template-columns: 5.3em 4.2em 1fr auto; gap: 8px; align-items: center; }
 .entry .t { font-weight: 700; }
-.entry .gap { color: var(--muted); font-size: .85rem; }
-.entry .acts { display: flex; gap: 2px; }
-.empty { color: var(--muted); margin: 0; }
+.entry .gap { color: var(--muted); font-size: .82rem; }
+.entry .acts, .sentry .acts { display: flex; gap: 0; }
+.empty { color: var(--muted); margin: 0; text-align: center; padding: 18px 8px; background: var(--surface-2); border-radius: 14px; }
 .note { font-size: .85rem; color: var(--muted); margin: 0; }
 .note.ok { color: var(--ok); }
 .confirm-del { display: flex; gap: 6px; align-items: center; }
 .confirm-clear { display: flex; flex-direction: column; gap: 10px; }
-.undo-bar { background: var(--milk); padding: 14px 18px; gap: 8px; }
+.undo-bar { background: var(--surface-2); padding: 14px 18px; gap: 8px; }
 
 /* Sheet */
-.scrim { position: fixed; inset: 0; background: rgb(10 15 25 / .45); display: flex; align-items: flex-end; justify-content: center; z-index: 20; padding: 0 max(12px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(12px, env(safe-area-inset-left, 0px)); }
-.sheet { background: var(--surface); width: 100%; max-width: 520px; border-radius: 18px 18px 0 0; padding: 20px 18px 24px; display: flex; flex-direction: column; gap: 14px; max-height: 90%; overflow: auto; }
-@media (min-width: 600px) { .scrim { align-items: center; } .sheet { border-radius: 18px; } }
+.scrim { position: fixed; inset: 0; background: rgb(8 12 22 / .45); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); display: flex; align-items: flex-end; justify-content: center; z-index: 30; padding: 0 max(12px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(12px, env(safe-area-inset-left, 0px)); }
+.sheet { background: var(--surface); width: 100%; max-width: 540px; border-radius: 26px 26px 0 0; padding: 12px 20px 26px; display: flex; flex-direction: column; gap: 14px; max-height: 90%; overflow: auto; box-shadow: var(--shadow-lg); }
+.sheet::before { content: ""; align-self: center; width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin-bottom: 4px; flex: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .scrim:not([hidden]) { animation: fade .2s ease; }
+  .scrim:not([hidden]) .sheet { animation: up .28s cubic-bezier(.2, .8, .2, 1); }
+  @keyframes fade { from { opacity: 0; } }
+  @keyframes up { from { transform: translateY(40px); opacity: .4; } }
+}
+@media (min-width: 600px) { .scrim { align-items: center; } .sheet { border-radius: 24px; } .sheet::before { display: none; } }
 .sheet-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
 .err { color: var(--due); font-size: .9rem; margin: 0; }
 
+/* Quick-log sheet */
+.quick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.qbtn { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; text-align: left; padding: 14px; min-height: 92px; border-radius: 18px; border: 0; }
+.qbtn svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.qbtn small { display: block; font-weight: 600; font-size: .78rem; opacity: .85; }
+.qbtn.f { background: var(--accent-soft); color: var(--ink); }
+.qbtn.f svg { color: var(--feed-mark); }
+.qbtn.s { background: var(--sleep-soft); color: var(--ink); }
+.qbtn.s svg { color: var(--sleep); }
+.quick-dia { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.quick-dia button { min-height: 52px; }
+
 /* Bottom tabs */
-.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--surface); border-top: 1px solid var(--line);
-  padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
-.tabs-inner { display: flex; gap: 4px; max-width: 520px; margin: 0 auto; }
-.tabs button { flex: 1; border: 0; background: transparent; border-radius: 12px; color: var(--muted); font-size: .78rem; padding: 6px 4px; min-height: 52px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; pointer-events: none;
+  padding: 0 max(12px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
+.tabs-inner { pointer-events: auto; display: flex; align-items: center; gap: 2px; max-width: 460px; margin: 0 auto; padding: 6px; border-radius: 24px;
+  background: var(--glass); -webkit-backdrop-filter: saturate(1.6) blur(16px); backdrop-filter: saturate(1.6) blur(16px); border: 1px solid var(--line); box-shadow: var(--shadow-lg); }
+.tabs button { flex: 1; border: 0; background: transparent; border-radius: 18px; color: var(--muted); font-size: .72rem; padding: 6px 2px; min-height: 54px; box-shadow: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
 .tabs button[aria-current="page"] { color: var(--accent); background: var(--accent-soft); }
 .tabs svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.tabs .fab { flex: 0 0 58px; height: 58px; min-height: 58px; border-radius: 20px; margin: -18px 4px 0; color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 10px 22px -8px var(--accent), 0 0 0 5px var(--bg); }
+.tabs .fab svg { width: 28px; height: 28px; stroke-width: 2.5; }
+
+/* Toast */
+.toast { position: fixed; left: 50%; bottom: calc(100px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); opacity: 0; z-index: 40; pointer-events: none;
+  background: var(--ink); color: var(--surface); font-weight: 700; font-size: .9rem; padding: 10px 16px 10px 12px; border-radius: 14px; box-shadow: var(--shadow-lg);
+  display: flex; align-items: center; gap: 8px; transition: opacity .2s, transform .25s cubic-bezier(.2, .8, .2, 1); max-width: calc(100% - 32px); }
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+.toast i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--ok); color: #fff; font-style: normal; font-size: .8rem; flex: none; }
 
 /* Dashboard */
-.filters { display: flex; flex-direction: column; gap: 8px; }
-.filter-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.filter-row > .label { min-width: 4.2em; }
+.filters { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
+.seg { display: inline-flex; gap: 2px; padding: 3px; background: var(--surface); border: 1px solid var(--line); border-radius: 13px; box-shadow: var(--shadow); }
+.seg button { min-height: 34px; padding: 4px 8px; font-size: .8rem; border: 0; border-radius: 10px; background: transparent; color: var(--muted); box-shadow: none; display: inline-flex; align-items: center; gap: 6px; }
+.seg button i { width: 8px; height: 8px; border-radius: 50%; }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--ink); }
+.seg button[aria-pressed="false"] i { opacity: .35; }
 .toggles button[aria-pressed="false"] { background: transparent; border-color: var(--line); color: var(--muted); }
 .toggles button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); }
-.now-grid { display: flex; flex-wrap: wrap; gap: 10px; }
-.now-card { flex: 1 1 150px; border: 1px solid var(--line); border-radius: 12px; background: var(--milk); padding: 12px 14px; min-width: 0;
+
+.hero-card { position: relative; overflow: hidden; border: 0; color: #fff; padding: 20px;
+  background: linear-gradient(140deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 55%, var(--accent-2)) 100%); }
+:root[data-theme="dark"] .hero-card { color: var(--accent-ink); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hero-card { color: var(--accent-ink); } }
+.hero-card::after { content: ""; position: absolute; width: 220px; height: 220px; right: -70px; top: -90px; border-radius: 50%; background: rgb(255 255 255 / .1); pointer-events: none; }
+.hero-card.is-due { background: linear-gradient(140deg, var(--due), color-mix(in srgb, var(--due) 70%, #d1206a)); }
+.hero-row { display: flex; align-items: center; gap: 18px; position: relative; z-index: 1; }
+.mini-ring { width: 92px; height: 92px; flex: none; position: relative; }
+.mini-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.mini-ring circle { fill: none; stroke-width: 9; }
+.mini-ring .tr { stroke: rgb(255 255 255 / .22); }
+.mini-ring .fl { stroke: currentColor; stroke-linecap: round; transition: stroke-dashoffset .6s ease; }
+.mini-ring .ic { position: absolute; inset: 0; display: grid; place-items: center; }
+.mini-ring .ic svg { width: 30px; height: 30px; transform: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.hero-card .label { color: inherit; opacity: .85; }
+.hero-card .big { font-family: var(--font-display); font-size: 2.6rem; font-weight: 800; line-height: 1.05; letter-spacing: -.03em; }
+.hero-card .note { color: inherit; opacity: .9; }
+.hero-card button { position: relative; z-index: 1; background: rgb(255 255 255 / .95); color: #14244d; border: 0; box-shadow: 0 6px 16px -8px rgb(0 0 0 / .4); width: 100%; }
+.now-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.now-grid > [hidden] { display: none; }
+.now-grid:has(> :only-child:not([hidden])), .now-grid.one { grid-template-columns: 1fr; }
+.now-card { border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); padding: 16px; min-width: 0;
   display: flex; flex-direction: column; gap: 4px; }
+.now-card .chip-ic { width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 6px; }
+.now-card .chip-ic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.now-card.sl .chip-ic { background: var(--sleep-soft); color: var(--sleep); }
+.now-card.di .chip-ic { background: var(--diaper-soft); color: var(--diaper); }
 .now-card > button, .now-card .dbtns { margin-top: auto; }
-.now-card .note { margin-bottom: 6px; }
+.now-card .note { margin-bottom: 8px; overflow-wrap: anywhere; }
 .dbtns { display: flex; gap: 6px; }
-.dbtns button { flex: 1; padding-inline: 6px; }
-.now-card .big { font-family: var(--font-display); font-size: 1.75rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
-.now-card .note { overflow-wrap: anywhere; }
-.now-card.is-due { background: var(--due-soft); border-color: var(--due); }
-.now-card.is-due .big { color: var(--due); }
-.now-card.is-asleep { background: var(--sleep-soft); border-color: var(--sleep); }
+.dbtns button { flex: 1; padding-inline: 4px; }
+.now-card .big { font-family: var(--font-display); font-size: 1.7rem; font-weight: 800; line-height: 1.05; letter-spacing: -.02em; }
+.now-card.is-asleep { background: var(--sleep-soft); border-color: transparent; }
+.now-card.is-asleep .chip-ic { background: var(--sleep); color: var(--sleep-ink); }
+@media (prefers-reduced-motion: no-preference) {
+  .now-card.is-asleep .chip-ic { animation: breathe 3.2s ease-in-out infinite; }
+  @keyframes breathe { 50% { transform: scale(1.08); } }
+}
+
 .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.tile { background: var(--milk); border-radius: 10px; padding: 8px 10px; border-left: 4px solid var(--feed-mark); min-width: 0; }
-.tile.s { border-left-color: var(--sleep-mark); }
-.tile.d { border-left-color: var(--diaper-mark); }
-.tile .v { white-space: nowrap; font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; }
-.tile .k { font-size: .78rem; color: var(--muted); font-weight: 600; }
-.legend { display: flex; gap: 14px; font-size: .8rem; color: var(--muted); flex-wrap: wrap; }
+.tile { background: var(--surface-2); border-radius: 14px; padding: 10px 12px 12px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.tile .v { white-space: nowrap; font-family: var(--font-display); font-size: 1.3rem; font-weight: 800; line-height: 1.15; letter-spacing: -.02em; }
+.tile .k { font-size: .76rem; color: var(--muted); font-weight: 600; line-height: 1.25; }
+.tile .k i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: 0; }
+.meter { height: 6px; border-radius: 3px; margin-top: 6px; overflow: hidden; }
+.tile .meter { background: color-mix(in srgb, var(--feed-mark) 16%, transparent); }
+.tile.s .meter { background: color-mix(in srgb, var(--sleep-mark) 16%, transparent); }
+.tile.d .meter { background: color-mix(in srgb, var(--diaper-mark) 16%, transparent); }
+.meter b { display: block; height: 100%; border-radius: 3px; background: var(--feed-mark); width: 0; transition: width .6s cubic-bezier(.2, .8, .2, 1); }
+.tile.s .meter b { background: var(--sleep-mark); }
+.tile.d .meter b { background: var(--diaper-mark); }
+.tile .vs { font-size: .72rem; color: var(--faint); font-weight: 600; margin-top: 3px; }
+.legend { display: flex; gap: 12px; font-size: .78rem; color: var(--muted); flex-wrap: wrap; font-weight: 600; }
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
-.tl { position: relative; height: 32px; background: var(--milk); border-radius: 8px; overflow: hidden; }
-.tl .s { position: absolute; top: 5px; bottom: 5px; background: var(--sleep-mark); border-radius: 4px; min-width: 2px; }
-.tl .p { position: absolute; top: 54%; bottom: 2px; width: 4px; margin-left: -2px; background: var(--diaper-mark); border-radius: 2px; box-shadow: 0 0 0 2px var(--milk); }
-.tl .f { position: absolute; top: 2px; bottom: 54%; width: 4px; margin-left: -2px; background: var(--feed-mark); border-radius: 2px; box-shadow: 0 0 0 2px var(--milk); }
-.tl-axis { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); margin-top: 4px; }
+.legend i.dot { border-radius: 50%; }
+.legend i.tick { width: 3px; height: 11px; border-radius: 2px; }
 .chart-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.chart-head .hero { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; }
-.chart svg { width: 100%; height: auto; display: block; touch-action: manipulation; }
-.chart .ax { fill: var(--muted); font-size: 11px; font-family: var(--font-body); }
-.chart .ax.on { fill: var(--ink); font-weight: 700; }
-.chart .val { fill: var(--ink); font-size: 11px; font-weight: 700; font-family: var(--font-body); }
+.chart-head .hero { font-family: var(--font-display); font-size: 1rem; font-weight: 700; color: var(--muted); }
+.chart-head .hero b { color: var(--ink); font-size: 1.25rem; font-weight: 800; }
+.chart { display: flex; flex-direction: column; gap: 6px; }
+.chart + .chart { margin-top: 10px; padding-top: 16px; border-top: 1px solid var(--line); }
+.chart svg { width: 100%; height: auto; display: block; touch-action: manipulation; overflow: visible; }
+.chart .ax, .viz .ax { fill: var(--faint); font-size: 10px; font-family: var(--font-body); font-weight: 600; }
+.chart .ax.on { fill: var(--ink); font-weight: 800; }
+.viz .lane { fill: var(--muted); font-size: 9.5px; font-family: var(--font-body); font-weight: 700; letter-spacing: .04em; }
+.chart .val { fill: var(--ink); font-size: 11px; font-weight: 800; font-family: var(--font-body); }
 .chart .base { stroke: var(--line); stroke-width: 1; }
-.chart .avg { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
-.chart .sel { fill: var(--milk); }
+.chart .grid, .viz .grid { stroke: var(--grid); stroke-width: 1; }
+.chart .avg { stroke: var(--muted); stroke-width: 1.25; stroke-dasharray: 4 3; }
+.chart .avg-t { fill: var(--muted); font-size: 9.5px; font-weight: 700; font-family: var(--font-body); }
+.chart .sel { fill: var(--surface-2); }
 .chart .bar-f { fill: var(--feed-mark); }
 .chart .bar-s { fill: var(--sleep-mark); }
 .chart .bar-d { fill: var(--diaper-mark); }
-.chart .hit { fill: transparent; cursor: pointer; }
-.chart-cap { margin: 4px 0 0; font-size: .85rem; color: var(--muted); min-height: 1.3em; }
+.chart .bars path { transition: opacity .2s; }
+.chart .bars.has-sel path:not(.on) { opacity: .45; }
+.chart .hit, .viz .hit { fill: transparent; cursor: pointer; outline: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .chart .bars.grow path { transform-box: fill-box; transform-origin: bottom; animation: grow .55s cubic-bezier(.2, .8, .2, 1) both; }
+  @keyframes grow { from { transform: scaleY(0); } }
+}
+.chart-cap { margin: 0; font-size: .84rem; color: var(--muted); min-height: 1.3em; }
+.viz svg { width: 100%; height: auto; display: block; overflow: visible; touch-action: manipulation; }
+.viz .bg { fill: var(--surface-2); }
+.viz .s-blk { fill: var(--sleep-mark); }
+.viz .f-dot { fill: var(--feed-mark); stroke: var(--surface); stroke-width: 2; }
+.viz .d-tick { fill: var(--diaper-mark); }
+.viz .now { stroke: var(--ink); stroke-width: 1.5; }
+.viz .now-t { fill: var(--ink); font-size: 9.5px; font-weight: 800; font-family: var(--font-body); }
+.viz .mk { cursor: pointer; transition: opacity .15s; }
+.viz.has-sel .mk:not(.on) { opacity: .35; }
+.viz .day-l { fill: var(--muted); font-size: 10px; font-weight: 700; font-family: var(--font-body); }
+.viz .day-l.on { fill: var(--ink); font-weight: 800; }
+.tip { position: fixed; z-index: 50; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow-lg);
+  padding: 8px 11px; font-size: .82rem; min-width: 120px; max-width: 240px; opacity: 0; transform: translateY(4px); transition: opacity .12s, transform .12s; }
+.tip.on { opacity: 1; transform: none; }
+.tip .tv { font-weight: 800; font-size: .95rem; display: flex; align-items: center; gap: 7px; }
+.tip .tv i { width: 12px; height: 3px; border-radius: 2px; flex: none; }
+.tip .tl2 { color: var(--muted); font-weight: 600; margin-top: 1px; }
+.empty-chart { color: var(--muted); font-size: .88rem; margin: 0; padding: 14px; text-align: center; background: var(--surface-2); border-radius: 12px; }
 
 /* Sleep */
-.sleep-hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; padding: 6px 0; }
-.sleep-hero .moon { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
-.sleep-hero.is-asleep .moon { background: var(--sleep-soft); color: var(--sleep); }
-.sleep-hero .moon svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.sleep-hero .countdown { font-size: 2.8rem; }
-button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
-.sentry { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px dashed var(--line); }
-.sentry:last-child { border-bottom: 0; }
+.sleep-hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 8px 0 4px; }
+.sleep-hero .moon { width: 72px; height: 72px; border-radius: 24px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); margin-bottom: 4px; }
+.sleep-hero.is-asleep .moon { background: var(--sleep); color: var(--sleep-ink); box-shadow: 0 10px 24px -10px var(--sleep); }
+@media (prefers-reduced-motion: no-preference) { .sleep-hero.is-asleep .moon { animation: breathe 3.2s ease-in-out infinite; } }
+.sleep-hero .moon svg { width: 34px; height: 34px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.sleep-hero .countdown { font-size: 3rem; }
+button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 18px; }
+.sentry { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
 .sentry .t { font-weight: 700; white-space: nowrap; }
 .sentry .tag { display: block; color: var(--muted); font-size: .8rem; font-weight: 600; }
-.sentry .acts { display: flex; gap: 2px; }
+.sentry.live { background: var(--sleep-soft); }
 .sentry.live .tag { color: var(--sleep); }
 
 /* Diapers */
 .sleep-hero .moon.dia { background: var(--diaper-soft); color: var(--diaper); }
 .dia-btns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.dia-btns button { min-height: 64px; font-size: 1.1rem; }
+.dia-btns button { min-height: 64px; font-size: 1.1rem; border-radius: 18px; }
 .logged { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .25); }
+.settings-group { background: var(--surface-2) !important; box-shadow: none; }
 </style>
 
 <main id="app">
   <header class="top">
-    <div>
-      <h1 id="title">Ari's feeds</h1>
-      <p class="sub" id="subtitle">Bottle log and next-feed reminder</p>
+    <div class="hello">
+      <div class="avatar" id="avatar" aria-hidden="true">A</div>
+      <div>
+        <h1 id="title">Ari's feeds</h1>
+        <p class="sub" id="subtitle">Bottle log and next-feed reminder</p>
+      </div>
     </div>
-    <button class="ghost small" id="btn-settings" type="button">Settings</button>
+    <button class="icon-btn" id="btn-settings" type="button" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
   </header>
 
   <!-- Shown to every phone for a day after someone clears all data -->
@@ -280,90 +414,102 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
   <!-- Home dashboard -->
   <div id="view-home" class="view" hidden>
     <div class="filters" aria-label="Choose what the dashboard shows">
-      <div class="filter-row"><span class="label">Show</span>
-        <div class="chips toggles" id="dash-kinds">
-          <button type="button" data-kind="feeds">Feeds</button>
-          <button type="button" data-kind="sleep">Sleep</button>
-          <button type="button" data-kind="diapers">Diapers</button>
+      <div class="seg" id="dash-kinds" role="group" aria-label="Show">
+        <button type="button" data-kind="feeds"><i style="background:var(--feed-mark)"></i>Feeds</button>
+        <button type="button" data-kind="sleep"><i style="background:var(--sleep-mark)"></i>Sleep</button>
+        <button type="button" data-kind="diapers"><i style="background:var(--diaper-mark)"></i>Diapers</button>
+      </div>
+      <div class="seg" id="dash-days" role="group" aria-label="Chart range">
+        <button type="button" data-days="7">7d</button>
+        <button type="button" data-days="14">14d</button>
+        <button type="button" data-days="30">30d</button>
+      </div>
+    </div>
+
+    <section class="panel hero-card" id="home-feed-card" data-show="feeds">
+      <div class="hero-row">
+        <div class="mini-ring" aria-hidden="true">
+          <svg viewBox="0 0 100 100"><circle class="tr" cx="50" cy="50" r="42"/><circle class="fl" id="home-feed-ring" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="263.89"/></svg>
+          <div class="ic"><svg viewBox="0 0 24 24"><path d="M9 2h6M10 2v3l-2 3v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V8l-2-3V2M8 12h8"/></svg></div>
+        </div>
+        <div style="min-width:0">
+          <span class="label" id="home-feed-label">Next feed in</span>
+          <div class="big num" id="home-feed-big">--</div>
+          <p class="note" id="home-feed-sub"></p>
         </div>
       </div>
-      <div class="filter-row"><span class="label">Charts</span>
-        <div class="chips toggles" id="dash-days">
-          <button type="button" data-days="7">7 days</button>
-          <button type="button" data-days="14">14 days</button>
+      <button class="small" id="home-log-feed" type="button">Log a feed</button>
+    </section>
+
+    <div class="now-grid" id="now-grid">
+      <div class="now-card sl" id="home-sleep-card" data-show="sleep">
+        <div class="chip-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></div>
+        <span class="label" id="home-sleep-label">Awake for</span>
+        <span class="big num" id="home-sleep-big">--</span>
+        <span class="note" id="home-sleep-sub"></span>
+        <span class="note" id="home-sleep-lock" hidden></span>
+        <button class="sleep small" id="home-sleep-toggle" type="button">Start sleep</button>
+      </div>
+      <div class="now-card di" id="home-diaper-card" data-show="diapers">
+        <div class="chip-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6h18v4a9 9 0 0 1-18 0zM8 6v3a4 4 0 0 0 8 0V6"/></svg></div>
+        <span class="label">Last diaper</span>
+        <span class="big num" id="home-diaper-big">--</span>
+        <span class="note" id="home-diaper-sub"></span>
+        <span class="note" id="home-diaper-lock" hidden></span>
+        <div class="dbtns">
+          <button class="diaper small" type="button" data-log="pee">Pee</button>
+          <button class="diaper small" type="button" data-log="poo">Poo</button>
+          <button class="diaper small" type="button" data-log="both">Both</button>
         </div>
       </div>
     </div>
 
     <section class="panel">
-      <div class="now-grid">
-        <div class="now-card" id="home-feed-card" data-show="feeds">
-          <span class="label" id="home-feed-label">Next feed in</span>
-          <span class="big" id="home-feed-big">--</span>
-          <span class="note" id="home-feed-sub"></span>
-          <button class="primary small" id="home-log-feed" type="button">Log a feed</button>
-        </div>
-        <div class="now-card" id="home-sleep-card" data-show="sleep">
-          <span class="label" id="home-sleep-label">Awake for</span>
-          <span class="big" id="home-sleep-big">--</span>
-          <span class="note" id="home-sleep-sub"></span>
-          <span class="note" id="home-sleep-lock" hidden></span>
-          <button class="sleep small" id="home-sleep-toggle" type="button">Start sleep</button>
-        </div>
-        <div class="now-card" id="home-diaper-card" data-show="diapers">
-          <span class="label">Last diaper</span>
-          <span class="big" id="home-diaper-big">--</span>
-          <span class="note" id="home-diaper-sub"></span>
-          <span class="note" id="home-diaper-lock" hidden></span>
-          <div class="dbtns">
-            <button class="diaper small" type="button" data-log="pee">Pee</button>
-            <button class="diaper small" type="button" data-log="poo">Poo</button>
-            <button class="diaper small" type="button" data-log="both">Both</button>
-          </div>
-        </div>
+      <div class="top"><h2>Today</h2><span class="sub" id="home-date"></span></div>
+      <div class="tiles" data-show="feeds">
+        <div class="tile"><div class="v" id="st-oz">0</div><div class="k">oz today</div><div class="meter"><b id="mt-oz"></b></div><div class="vs" id="vs-oz"></div></div>
+        <div class="tile"><div class="v" id="st-feeds">0</div><div class="k">feeds today</div><div class="meter"><b id="mt-feeds"></b></div><div class="vs" id="vs-feeds"></div></div>
+        <div class="tile"><div class="v" id="st-gap">--</div><div class="k">avg gap, 24h</div></div>
+      </div>
+      <div class="tiles" data-show="sleep">
+        <div class="tile s"><div class="v" id="st-sleep">0m</div><div class="k">sleep, last 24h</div><div class="meter"><b id="mt-sleep"></b></div><div class="vs" id="vs-sleep"></div></div>
+        <div class="tile s"><div class="v" id="st-naps">0</div><div class="k">naps today</div></div>
+        <div class="tile s"><div class="v" id="st-longest">--</div><div class="k">longest, 24h</div></div>
+      </div>
+      <div class="tiles" data-show="diapers">
+        <div class="tile d"><div class="v" id="st-dia">0</div><div class="k">diapers today</div><div class="meter"><b id="mt-dia"></b></div><div class="vs" id="vs-dia"></div></div>
+        <div class="tile d"><div class="v" id="st-pee">0</div><div class="k">with pee</div></div>
+        <div class="tile d"><div class="v" id="st-poo">0</div><div class="k">with poo</div></div>
       </div>
     </section>
 
     <section class="panel">
-      <div class="top"><h2>Today</h2><span class="sub" id="home-date"></span></div>
-      <div class="tiles" data-show="feeds">
-        <div class="tile"><div class="v num" id="st-oz">0</div><div class="k">oz today</div></div>
-        <div class="tile"><div class="v num" id="st-feeds">0</div><div class="k">feeds today</div></div>
-        <div class="tile"><div class="v num" id="st-gap">--</div><div class="k">avg between feeds</div></div>
-      </div>
-      <div class="tiles" data-show="sleep">
-        <div class="tile s"><div class="v num" id="st-sleep">0m</div><div class="k">sleep, last 24h</div></div>
-        <div class="tile s"><div class="v num" id="st-naps">0</div><div class="k">naps today</div></div>
-        <div class="tile s"><div class="v num" id="st-longest">--</div><div class="k">longest sleep, 24h</div></div>
-      </div>
-      <div class="tiles" data-show="diapers">
-        <div class="tile d"><div class="v num" id="st-dia">0</div><div class="k">diapers today</div></div>
-        <div class="tile d"><div class="v num" id="st-pee">0</div><div class="k">with pee</div></div>
-        <div class="tile d"><div class="v num" id="st-poo">0</div><div class="k">with poo</div></div>
-      </div>
-      <div>
-        <div class="chart-head"><span class="label">Last 24 hours</span>
-          <span class="legend"><span data-show="sleep"><i style="background:var(--sleep-mark)"></i>Sleep</span><span data-show="feeds"><i style="background:var(--feed-mark)"></i>Feed (top)</span><span data-show="diapers"><i style="background:var(--diaper-mark)"></i>Diaper (bottom)</span></span></div>
-        <div class="tl" id="timeline" role="img" aria-label="The last 24 hours" style="margin-top:6px"></div>
-        <div class="tl-axis" id="timeline-axis"></div>
-        <p class="chart-cap" id="timeline-cap"></p>
-      </div>
+      <div class="chart-head"><h2>Last 24 hours</h2><span class="sub" id="timeline-sum"></span></div>
+      <div class="viz" id="timeline" role="img" aria-label="The last 24 hours"></div>
+      <p class="chart-cap" id="timeline-cap"></p>
+    </section>
+
+    <section class="panel">
+      <div class="chart-head"><h2>Daily rhythm</h2>
+        <span class="legend"><span data-show="sleep"><i style="background:var(--sleep-mark)"></i>Sleep</span><span data-show="feeds"><i class="dot" style="background:var(--feed-mark)"></i>Feed</span><span data-show="diapers"><i class="tick" style="background:var(--diaper-mark)"></i>Diaper</span></span></div>
+      <div class="viz" id="rhythm"></div>
+      <p class="chart-cap" id="rhythm-cap"></p>
     </section>
 
     <section class="panel">
       <h2 id="wk-title">Last 7 days</h2>
       <div class="chart" data-show="feeds">
-        <div class="chart-head"><span class="label">Milk per day</span><span class="hero num" id="wk-oz-hero"></span></div>
+        <div class="chart-head"><span class="label">Milk per day</span><span class="hero" id="wk-oz-hero"></span></div>
         <div id="wk-oz"></div>
         <p class="chart-cap" id="wk-oz-cap"></p>
       </div>
       <div class="chart" data-show="sleep">
-        <div class="chart-head"><span class="label">Sleep per day</span><span class="hero num" id="wk-sleep-hero"></span></div>
+        <div class="chart-head"><span class="label">Sleep per day</span><span class="hero" id="wk-sleep-hero"></span></div>
         <div id="wk-sleep"></div>
         <p class="chart-cap" id="wk-sleep-cap"></p>
       </div>
       <div class="chart" data-show="diapers">
-        <div class="chart-head"><span class="label">Diapers per day</span><span class="hero num" id="wk-dia-hero"></span></div>
+        <div class="chart-head"><span class="label">Diapers per day</span><span class="hero" id="wk-dia-hero"></span></div>
         <div id="wk-dia"></div>
         <p class="chart-cap" id="wk-dia-cap"></p>
       </div>
@@ -376,6 +522,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     <div class="clock">
       <div class="ring" id="ring">
         <svg viewBox="0 0 120 120" aria-hidden="true">
+          <defs><linearGradient id="ring-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent-2)"/></linearGradient></defs>
           <circle class="track" cx="60" cy="60" r="52"></circle>
           <circle class="fill" id="ring-fill" cx="60" cy="60" r="52" stroke-dasharray="326.73" stroke-dashoffset="326.73"></circle>
         </svg>
@@ -457,10 +604,33 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
   <div class="tabs-inner">
     <button type="button" data-tab="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Home</button>
     <button type="button" data-tab="feeds"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2h6M10 2v3l-2 3v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V8l-2-3V2M8 12h8"/></svg>Feeds</button>
+    <button type="button" class="fab" id="btn-quick" aria-label="Quick log"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
     <button type="button" data-tab="sleep"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>Sleep</button>
     <button type="button" data-tab="diaper"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v4a9 9 0 0 1-18 0zM8 6v3a4 4 0 0 0 8 0V6"/></svg>Diapers</button>
   </div>
 </nav>
+
+<!-- Quick-log sheet -->
+<div class="scrim" id="quick-sheet" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="quick-title">
+    <h2 id="quick-title">Log something</h2>
+    <div class="quick">
+      <button type="button" class="qbtn f" id="q-feed"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2h6M10 2v3l-2 3v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V8l-2-3V2M8 12h8"/></svg><span>Feed<small id="q-feed-sub">Bottle and amount</small></span></button>
+      <button type="button" class="qbtn s" id="q-sleep"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><span id="q-sleep-l">Start sleep<small id="q-sleep-sub">Fell asleep now</small></span></button>
+    </div>
+    <span class="label">Diaper change, now</span>
+    <div class="quick-dia">
+      <button class="diaper" type="button" data-log="pee">Pee</button>
+      <button class="diaper" type="button" data-log="poo">Poo</button>
+      <button class="diaper" type="button" data-log="both">Both</button>
+    </div>
+    <p class="note" id="quick-lock" hidden></p>
+    <div class="sheet-actions"><button type="button" id="btn-quick-cancel">Close</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><i aria-hidden="true">✓</i><span id="toast-text"></span></div>
+<div class="tip" id="tip" aria-hidden="true"></div>
 
 <!-- Diaper sheet -->
 <div class="scrim" id="diaper-sheet" hidden>
@@ -539,12 +709,12 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     <label class="field"><span>Reminder sound</span>
       <select id="set-sound"><option value="on">Chime</option><option value="off">Silent</option></select>
     </label>
-    <div class="panel" style="background:var(--milk)" id="share-zone" hidden>
+    <div class="panel settings-group" id="share-zone" hidden>
       <span class="label">Share with family</span>
       <p class="note">Everyone who opens this link sees the same log, countdown and reminders.</p>
       <div><button type="button" class="small" id="btn-share">Copy share link</button> <span class="note" id="share-note"></span></div>
     </div>
-    <div class="panel" style="background:var(--milk)" id="push-zone" hidden>
+    <div class="panel settings-group" id="push-zone" hidden>
       <span class="label">Phone notifications, even when the app is closed</span>
       <p class="note">Install the free <strong>ntfy</strong> app (App Store or Google Play), tap <strong>+</strong>, and subscribe to this topic. Keep the server as ntfy.sh.</p>
       <div><code class="num" id="push-topic"></code> <button type="button" class="small" id="btn-push-copy">Copy topic</button> <button type="button" class="small" id="btn-push-test">Send test</button> <span class="note" id="push-note"></span></div>
@@ -552,12 +722,12 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
       <p class="note">Everyone subscribed gets a notification whenever a feed, sleep or diaper is logged, edited or deleted, plus the next-feed reminder when it's due.</p>
       <label class="field"><span>Your name on this phone (optional, shown in those notifications)</span><input id="set-me" type="text" maxlength="30" autocomplete="off" placeholder="e.g. Mom"></label>
     </div>
-    <div class="panel" style="background:var(--milk)" id="leave-panel" hidden>
+    <div class="panel settings-group" id="leave-panel" hidden>
       <span class="label">Leave this family</span>
       <p class="note">Stops sharing on this phone only. Everyone else keeps the shared log.</p>
       <div id="leave-zone"><button type="button" class="small" id="btn-leave">Leave family</button></div>
     </div>
-    <div class="panel" style="background:var(--milk)">
+    <div class="panel settings-group">
       <span class="label">Start over</span>
       <p class="note" id="reset-note">Clears every logged feed, sleep and diaper on this device.</p>
       <div id="reset-zone"><button type="button" class="small" id="btn-reset">Clear all data</button></div>
@@ -866,6 +1036,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     pushFeed(f); save(); render();
     if (fbConfig && !remote && !connecting) connect();
     scheduleReminder();
+    toast(`Feed logged · ${oz(amount)} oz at ${clock(time)}`);
     announce(f.id, `${state.name} was fed ${oz(amount)} oz`, `Fed at ${clock(time)}. Next feed due ${clock(time + state.intervalMin * MIN)}.`, 'baby_bottle');
   }
   function snooze() {
@@ -908,7 +1079,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     if (editingId) {
       const f = state.feeds.find((x) => x.id === editingId);
       if (f) { f.time = t; f.oz = a; pushFeed(f); announce(f.id, 'Feed updated', `${oz(a)} oz at ${clock(t)}`, 'baby_bottle,pencil2'); }
-      state.alertedFor = null; saveLocal(); render(); scheduleReminder();
+      state.alertedFor = null; saveLocal(); render(); scheduleReminder(); toast('Feed updated');
     } else addFeed(t, a);
     closeFeed();
   });
@@ -1158,13 +1329,15 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
   const unlockIn = (ms) => `${Math.ceil(ms / MIN)} min`;
   function applyLocks() {
     const sl = sleepLockLeft(); const dl = diaperLockLeft();
-    $('btn-sleep-toggle').disabled = sl > 0; $('home-sleep-toggle').disabled = sl > 0;
+    $('btn-sleep-toggle').disabled = sl > 0; $('home-sleep-toggle').disabled = sl > 0; $('q-sleep').disabled = sl > 0;
     $('sleep-ago').querySelectorAll('button').forEach((b) => { b.disabled = sl > 0 || b.dataset.blocked === '1'; });
     document.querySelectorAll('[data-log]').forEach((b) => { b.disabled = dl > 0; });
     [['sleep-lock-note', sl, 'Sleep'], ['home-sleep-lock', sl, ''], ['diaper-lock-note', dl, 'Diaper'], ['home-diaper-lock', dl, '']].forEach(([id, ms, what]) => {
       const el = $(id); el.hidden = !ms;
       if (ms) el.textContent = what ? `${what} buttons unlock in ${unlockIn(ms)}, so a double tap can't log twice. Use Edit in the log to fix a mistake.` : `Unlocks in ${unlockIn(ms)}`;
     });
+    const ql = [sl ? `Sleep unlocks in ${unlockIn(sl)}` : '', dl ? `Diapers unlock in ${unlockIn(dl)}` : ''].filter(Boolean);
+    $('quick-lock').hidden = !ql.length; $('quick-lock').textContent = ql.join(' · ');
   }
   function startSleep(at) {
     if (activeSleep() || sleepLockLeft()) return;
@@ -1172,6 +1345,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     const sl = { id: makeId(), start: roundToMinute(at), end: null };
     state.sleeps.push(sl); pushSleep(sl); saveLocal(); render();
     announce(sl.id, `${state.name} fell asleep`, `Asleep since ${clock(sl.start)}.`, 'zzz');
+    toast(`Sleep started at ${clock(sl.start)}`);
     if (fbConfig && !remote && !connecting) connect();
   }
   function endSleep(at) {
@@ -1180,6 +1354,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     state.sleeps.filter((x) => x.end == null).forEach((x) => {
       x.end = Math.max(roundToMinute(at), x.start + MIN); pushSleep(x);
       announce(x.id, `${state.name} woke up`, `Slept ${dur(x.end - x.start)} (${clock(x.start)} – ${clock(x.end)}).`, 'sunny');
+      toast(`Woke up · slept ${dur(x.end - x.start)}`);
     });
     saveLocal(); render();
   }
@@ -1294,7 +1469,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     let sl = state.sleeps.find((x) => x.id === editingSleep);
     const isEdit = !!sl;
     if (sl) { sl.start = st; sl.end = en; } else { sl = { id: makeId(), start: st, end: en }; state.sleeps.push(sl); }
-    pushSleep(sl); saveLocal(); closeSleep(); render();
+    pushSleep(sl); saveLocal(); closeSleep(); render(); toast(isEdit ? 'Sleep updated' : 'Sleep saved');
     announce(sl.id, isEdit ? 'Sleep updated' : 'Sleep logged',
       en == null ? `Asleep since ${clock(st)}.` : `${clock(st)} – ${clock(en)} (${dur(en - st)}).`, isEdit ? 'zzz,pencil2' : 'zzz');
     if (fbConfig && !remote && !connecting) connect();
@@ -1323,6 +1498,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     const x = { id: makeId(), time: roundToMinute(Date.now()), kind, color: '', texture: '', rash: false, note: '' };
     state.diapers.push(x); pushDiaper(x); saveLocal();
     announceDiaper(x, false);
+    toast(`${DKINDS[kind]} logged at ${clock(x.time)}`);
     justLogged = x.id; clearTimeout(justLoggedTimer);
     justLoggedTimer = setTimeout(() => { justLogged = null; renderDiaper(); }, 2 * MIN);
     render();
@@ -1433,7 +1609,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     if (near) { err.textContent = `There's already a change at ${clock(near.time)}, within 5 minutes of this one. Edit that one instead.`; err.hidden = false; return; }
     let x = state.diapers.find((y) => y.id === editingDiaper); const isEdit = !!x;
     if (x) Object.assign(x, fields); else { x = Object.assign({ id: makeId() }, fields); state.diapers.push(x); }
-    pushDiaper(x); saveLocal(); closeDiaper(); render();
+    pushDiaper(x); saveLocal(); closeDiaper(); render(); toast(isEdit ? 'Diaper details saved' : 'Diaper change saved');
     announceDiaper(x, isEdit);
     if (fbConfig && !remote && !connecting) connect();
   });
@@ -1443,15 +1619,16 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
   const DASH_KEY = 'feeding-tracker.dash';
   const dash = { feeds: true, sleep: true, diapers: true, days: 7 };
   try { Object.assign(dash, JSON.parse(store.get(DASH_KEY) || '{}')); } catch (e) {}
-  if (![7, 14].includes(dash.days)) dash.days = 7;
+  if (![7, 14, 30].includes(dash.days)) dash.days = 7;
   const KINDS = ['feeds', 'sleep', 'diapers'];
   function applyDash() {
     document.querySelectorAll('#dash-kinds button').forEach((b) => b.setAttribute('aria-pressed', String(!!dash[b.dataset.kind])));
     document.querySelectorAll('#dash-days button').forEach((b) => b.setAttribute('aria-pressed', String(dash.days === Number(b.dataset.days))));
     document.querySelectorAll('#view-home [data-show]').forEach((el) => { el.hidden = !dash[el.dataset.show]; });
     $('wk-title').textContent = `Last ${dash.days} days`;
+    $('now-grid').classList.toggle('one', !(dash.sleep && dash.diapers));
   }
-  const saveDash = () => { store.set(DASH_KEY, JSON.stringify(dash)); chartSel.oz = chartSel.sleep = chartSel.dia = null; renderHome(); };
+  const saveDash = () => { store.set(DASH_KEY, JSON.stringify(dash)); chartSel.oz = chartSel.sleep = chartSel.dia = null; grown.oz = grown.sleep = grown.dia = false; hideTip(); renderHome(); };
   document.querySelectorAll('#dash-kinds button').forEach((b) => b.addEventListener('click', () => {
     const k = b.dataset.kind;
     if (dash[k] && KINDS.filter((x) => dash[x]).length === 1) return; // keep at least one tracker on
@@ -1467,12 +1644,15 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
       fc.classList.toggle('is-due', isDue);
       $('home-feed-label').textContent = isDue ? 'Feed is due' : 'Next feed in';
       $('home-feed-big').textContent = isDue ? `+${dur(now - due)}` : dur(at - now);
-      $('home-feed-sub').textContent = `Last fed ${clock(f.time)} · ${oz(f.oz)} oz`;
+      $('home-feed-sub').textContent = isDue ? `Last fed ${clock(f.time)} · ${oz(f.oz)} oz` : `Due ${clock(at)} · last fed ${clock(f.time)}, ${oz(f.oz)} oz`;
+      const frac = Math.min(1, Math.max(0, (now - f.time) / Math.max(MIN, at - f.time)));
+      $('home-feed-ring').style.strokeDashoffset = String(263.89 * (1 - frac));
     } else {
       fc.classList.remove('is-due');
       $('home-feed-label').textContent = 'Next feed';
       $('home-feed-big').textContent = '--';
       $('home-feed-sub').textContent = 'No feeds logged yet';
+      $('home-feed-ring').style.strokeDashoffset = '263.89';
     }
     const a = activeSleep(); const wake = lastWake();
     $('home-sleep-card').classList.toggle('is-asleep', !!a);
@@ -1484,104 +1664,304 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     $('home-diaper-sub').textContent = d ? `${DKINDS[d.kind]} at ${clock(d.time)}${lp && lp !== d ? ` · last poo ${ago(now - lp.time)}` : ''}` : 'No changes logged yet';
   }
   const hours = (ms) => { const h = ms / 3600000; return h >= 10 ? `${Math.round(h)}h` : `${Math.round(h * 10) / 10}h`; };
-  const chartSel = { oz: null, sleep: null, dia: null };
-  function barChart(host, cap, key, data, cls, avg) {
-    const W = 320, H = 132, top = 20, bottom = 20, n = data.length, gap = n > 7 ? 4 : 8;
-    const bw = (W - gap * (n - 1)) / n;
-    const max = Math.max(1e-9, ...data.map((d) => d.value), avg || 0) * 1.12;
-    const y = (v) => top + (H - top - bottom) * (1 - v / max); const base = H - bottom;
-    const sel = chartSel[key] == null ? n - 1 : chartSel[key];
-    let out = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${data.map((d) => d.caption).join('; ')}">`;
-    data.forEach((d, i) => {
-      const x = i * (bw + gap);
-      if (i === sel) out += `<rect class="sel" x="${x - 3}" y="2" width="${bw + 6}" height="${H - 4}" rx="6"/>`;
-      const yt = y(d.value); const h = base - yt; const r = Math.min(4, h, bw / 2);
-      if (d.value > 0) out += `<path class="${cls}" d="M${x},${base}V${yt + r}Q${x},${yt} ${x + r},${yt}H${x + bw - r}Q${x + bw},${yt} ${x + bw},${yt + r}V${base}Z"/>`;
-      if (i === sel) out += `<text class="val" x="${x + bw / 2}" y="${Math.max(12, yt - 5)}" text-anchor="middle">${d.short}</text>`;
-      out += `<text class="ax${i === sel ? ' on' : ''}" x="${x + bw / 2}" y="${H - 5}" text-anchor="middle">${d.label}</text>`;
+  const round1 = (n) => Math.round(n * 10) / 10;
+  const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const hourLabel = (ms) => new Date(ms).toLocaleTimeString([], { hour: 'numeric' }).replace(':00', '').replace(/\s/g, '').toLowerCase();
+
+  // ---------- shared tooltip ----------
+  // One floating tooltip for every chart. Hover shows it with a mouse; a tap shows it on touch.
+  // The same text always also appears in the caption under the chart, so nothing is tooltip-only.
+  const tip = $('tip');
+  function showTip(el, rows) {
+    tip.innerHTML = '';
+    rows.forEach(([value, label, color]) => {
+      const v = document.createElement('div'); v.className = 'tv';
+      if (color) { const k = document.createElement('i'); k.style.background = color; v.appendChild(k); }
+      v.append(value); tip.appendChild(v);
+      if (label) { const l = document.createElement('div'); l.className = 'tl2'; l.textContent = label; tip.appendChild(l); }
     });
-    out += `<line class="base" x1="0" x2="${W}" y1="${base}" y2="${base}"/>`;
-    if (avg) out += `<line class="avg" x1="0" x2="${W}" y1="${y(avg)}" y2="${y(avg)}"/>`;
-    data.forEach((d, i) => { out += `<rect class="hit" data-i="${i}" x="${i * (bw + gap) - gap / 2}" y="0" width="${bw + gap}" height="${H}"/>`; });
-    host.innerHTML = out + '</svg>';
-    cap.textContent = data[sel].caption + (avg ? ' · dashed line is the daily average' : '');
-    host.querySelectorAll('.hit').forEach((r) => {
-      const pick = () => { chartSel[key] = Number(r.dataset.i); barChart(host, cap, key, data, cls, avg); };
-      r.addEventListener('click', pick); r.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') pick(); });
-    });
+    tip.classList.add('on');
+    const r = el.getBoundingClientRect(); const tw = tip.offsetWidth; const th = tip.offsetHeight;
+    let x = r.left + r.width / 2 - tw / 2; x = Math.max(8, Math.min(innerWidth - tw - 8, x));
+    let y = r.top - th - 8; if (y < 8) y = r.bottom + 8;
+    tip.style.left = `${x}px`; tip.style.top = `${y}px`;
   }
+  const hideTip = () => tip.classList.remove('on');
+  window.addEventListener('scroll', hideTip, { passive: true });
+  document.addEventListener('pointerdown', (e) => {
+    if (e.target.closest && e.target.closest('.hit, .mk')) return;
+    hideTip();
+    document.querySelectorAll('.viz.has-sel').forEach((v) => { v.classList.remove('has-sel'); v.querySelectorAll('.on').forEach((m) => m.classList.remove('on')); });
+  });
+  // Wires one mark: hover (mouse), tap and keyboard focus all select it and show its tooltip + caption.
+  function bindMark(el, viz, cap, rows, marks) {
+    const pick = () => {
+      viz.classList.add('has-sel');
+      viz.querySelectorAll('.on').forEach((m) => m.classList.remove('on'));
+      (marks || [el]).forEach((m) => m.classList.add('on'));
+      showTip(el, rows);
+      if (cap) cap.textContent = rows.map((r) => (r[1] ? `${r[1]}: ${r[0]}` : r[0])).join(' · ');
+    };
+    el.setAttribute('tabindex', '0'); el.setAttribute('role', 'button');
+    el.setAttribute('aria-label', rows.map((r) => `${r[1] || ''} ${r[0]}`.trim()).join(', '));
+    el.addEventListener('click', pick); el.addEventListener('focus', pick); el.addEventListener('blur', hideTip);
+    el.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') pick(); });
+    el.addEventListener('pointerleave', (e) => { if (e.pointerType !== 'mouse') return; hideTip(); viz.classList.remove('has-sel'); (marks || [el]).forEach((m) => m.classList.remove('on')); });
+  }
+  const css = (v) => `var(${v})`;
+  const svgEl = (host, w, h, label) => {
+    host.innerHTML = `<svg viewBox="0 0 ${w} ${h}"${label ? ` role="img" aria-label="${esc(label)}"` : ''}></svg>`;
+    return host.firstChild;
+  };
+  const add = (svg, tag, attrs, text) => {
+    const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+    if (text != null) el.textContent = text;
+    svg.appendChild(el); return el;
+  };
+  // Clean axis steps: 1, 2, 2.5 or 5 times a power of ten.
+  const niceStep = (max, n) => { const raw = max / n; const p = 10 ** Math.floor(Math.log10(raw)); return [1, 2, 2.5, 5, 10].map((m) => m * p).find((s) => s >= raw); };
+
+  // ---------- 24-hour timeline: one lane each for feeds, sleep and diapers ----------
+  function renderTimeline(now) {
+    const host = $('timeline'); const cap = $('timeline-cap'); const day0 = now - DAY;
+    const lanes = [['feeds', 'FEEDS'], ['sleep', 'SLEEP'], ['diapers', 'DIAPERS']].filter(([k]) => dash[k]);
+    const W = 340; const L = 54; const R = 6; const LH = 26; const top = 4; const H = top + lanes.length * (LH + 6) + 18;
+    const xs = (t) => L + ((t - day0) / DAY) * (W - L - R);
+    const svg = svgEl(host, W, H);
+    host.classList.remove('has-sel');
+    // hour grid every 3 hours, labelled every 6
+    const h0 = new Date(day0); h0.setMinutes(0, 0, 0); let g = h0.getTime() + 3600000;
+    for (; g < now; g += 3600000) {
+      const hr = new Date(g).getHours(); if (hr % 3) continue;
+      add(svg, 'line', { class: 'grid', x1: xs(g), x2: xs(g), y1: top, y2: H - 16 });
+      if (hr % 6 === 0 && xs(g) < W - 30) add(svg, 'text', { class: 'ax', x: xs(g), y: H - 4, 'text-anchor': 'middle' }, hourLabel(g));
+    }
+    let sum = [];
+    lanes.forEach(([k, name], i) => {
+      const y = top + i * (LH + 6);
+      add(svg, 'rect', { class: 'bg', x: L, y, width: W - L - R, height: LH, rx: 8 });
+      add(svg, 'text', { class: 'lane', x: 0, y: y + LH / 2 + 3.5 }, name);
+      if (k === 'sleep') {
+        const list = state.sleeps.filter((x) => sleepEnd(x, now) > day0);
+        list.forEach((x) => {
+          const a = Math.max(x.start, day0); const b = sleepEnd(x, now);
+          const r = add(svg, 'rect', { class: 's-blk mk', x: xs(a), y: y + 4, width: Math.max(3, xs(b) - xs(a)), height: LH - 8, rx: 4 });
+          const hit = add(svg, 'rect', { class: 'hit', x: xs(a) - 4, y, width: Math.max(14, xs(b) - xs(a) + 8), height: LH });
+          bindMark(hit, host, cap, [[dur(b - x.start), `${x.end == null ? 'Asleep since' : 'Slept'} ${clock(x.start)}${x.end == null ? '' : ` – ${clock(x.end)}`}`, css('--sleep-mark')]], [r]);
+        });
+        const tot = list.reduce((s2, x) => s2 + overlap(x, day0, now, now), 0);
+        if (tot) sum.push(`${dur(tot)} sleep`);
+      } else if (k === 'feeds') {
+        const list = state.feeds.filter((x) => x.time > day0).sort((a, b) => a.time - b.time);
+        list.forEach((x) => {
+          const c = add(svg, 'circle', { class: 'f-dot mk', cx: xs(x.time), cy: y + LH / 2, r: Math.max(4.5, Math.min(9, 3 + x.oz * 1.2)) });
+          const hit = add(svg, 'rect', { class: 'hit', x: xs(x.time) - 12, y, width: 24, height: LH });
+          bindMark(hit, host, cap, [[`${oz(x.oz)} oz`, `Feed at ${clock(x.time)}`, css('--feed-mark')]], [c]);
+        });
+        if (list.length) sum.push(`${oz(round1(list.reduce((s2, x) => s2 + x.oz, 0)))} oz`);
+      } else {
+        const list = state.diapers.filter((x) => x.time > day0);
+        list.forEach((x) => {
+          const t = add(svg, 'rect', { class: 'd-tick mk', x: xs(x.time) - 2, y: y + 5, width: 4, height: LH - 10, rx: 2 });
+          const hit = add(svg, 'rect', { class: 'hit', x: xs(x.time) - 12, y, width: 24, height: LH });
+          bindMark(hit, host, cap, [[diaperDesc(x), `Diaper at ${clock(x.time)}`, css('--diaper-mark')]], [t]);
+        });
+        if (list.length) sum.push(`${list.length} ${list.length === 1 ? 'diaper' : 'diapers'}`);
+      }
+    });
+    add(svg, 'line', { class: 'now', x1: xs(now), x2: xs(now), y1: top - 2, y2: H - 16 });
+    add(svg, 'text', { class: 'now-t', x: xs(now), y: H - 4, 'text-anchor': 'end' }, 'now');
+    $('timeline-sum').textContent = sum.join(' · ');
+    host.setAttribute('aria-label', `Last 24 hours: ${sum.join(', ') || 'nothing logged'}`);
+    cap.textContent = 'Tap a dot or block for details.';
+  }
+
+  // ---------- daily rhythm: one row per day, midnight to midnight ----------
+  function renderRhythm(days, now) {
+    const host = $('rhythm'); const cap = $('rhythm-cap');
+    const n = days.length; const rowH = n > 14 ? 13 : n > 7 ? 18 : 24; const gap = n > 14 ? 3 : 5;
+    const W = 340; const L = 44; const R = 6; const top = 2; const H = top + n * (rowH + gap) + 16;
+    const xs = (frac) => L + frac * (W - L - R);
+    const svg = svgEl(host, W, H);
+    host.classList.remove('has-sel');
+    [6, 12, 18].forEach((h) => {
+      add(svg, 'line', { class: 'grid', x1: xs(h / 24), x2: xs(h / 24), y1: 0, y2: H - 14 });
+      add(svg, 'text', { class: 'ax', x: xs(h / 24), y: H - 2, 'text-anchor': 'middle' }, hourLabel(new Date(2000, 0, 1, h).getTime()));
+    });
+    add(svg, 'text', { class: 'ax', x: xs(0), y: H - 2 }, hourLabel(new Date(2000, 0, 1, 0).getTime()));
+    [...days].reverse().forEach((d, i) => { // today on top
+      const y = top + i * (rowH + gap); const span = d.b - d.a;
+      const fx = (t) => xs((t - d.a) / span);
+      add(svg, 'rect', { class: 'bg', x: L, y, width: W - L - R, height: rowH, rx: 5 });
+      const showLabel = n <= 14 || i % 7 === 0 || d.today;
+      const lbl = showLabel ? add(svg, 'text', { class: 'day-l', x: 0, y: y + rowH / 2 + 3.5 }, n > 7 ? (d.today ? 'Today' : d.dateShort) : d.label) : null;
+      const marks = lbl ? [lbl] : [];
+      if (dash.sleep) state.sleeps.forEach((x) => {
+        const a = Math.max(x.start, d.a); const b = Math.min(sleepEnd(x, now), d.b);
+        if (b > a) marks.push(add(svg, 'rect', { class: 's-blk mk', x: fx(a), y: y + 2, width: Math.max(2, fx(b) - fx(a)), height: rowH - 4, rx: 3 }));
+      });
+      if (dash.diapers) d.dlist.forEach((x) => marks.push(add(svg, 'rect', { class: 'd-tick mk', x: fx(x.time) - 1.5, y: y + rowH * 0.55, width: 3, height: rowH * 0.45 - 1, rx: 1.5 })));
+      if (dash.feeds) d.flist.forEach((x) => marks.push(add(svg, 'circle', { class: 'f-dot mk', cx: fx(x.time), cy: y + rowH * 0.32, r: n > 14 ? 3 : 4, 'stroke-width': n > 14 ? 1.5 : 2 })));
+      const hit = add(svg, 'rect', { class: 'hit', x: 0, y: y - gap / 2, width: W, height: rowH + gap });
+      const rows = [];
+      if (dash.feeds) rows.push([`${oz(round1(d.oz))} oz`, `${d.feeds} ${d.feeds === 1 ? 'feed' : 'feeds'}`, css('--feed-mark')]);
+      if (dash.sleep) rows.push([dur(d.sleep), 'sleep', css('--sleep-mark')]);
+      if (dash.diapers) rows.push([String(d.dia), d.dia === 1 ? 'diaper' : 'diapers', css('--diaper-mark')]);
+      rows.unshift([d.name, '']);
+      bindMark(hit, host, cap, rows, marks);
+    });
+    cap.textContent = 'Each row is one day from midnight to midnight. Tap a row for its totals.';
+  }
+
+  // ---------- per-day bar chart ----------
+  const chartSel = { oz: null, sleep: null, dia: null };
+  const grown = {};
+  function barChart(host, cap, key, data, cls, avg, fmtAxis, color, minPeak) {
+    const W = 340, H = 150, top = 14, bottom = 22, left = 30, n = data.length;
+    const slot = (W - left) / n; const bw = Math.min(24, slot * (n > 14 ? 0.72 : 0.62));
+    const peak = Math.max(minPeak, ...data.map((d) => d.value), avg || 0);
+    const step = niceStep(peak, 3); const max = Math.ceil((peak * 1.05) / step) * step;
+    const y = (v) => top + (H - top - bottom) * (1 - v / max); const base = H - bottom;
+    const sel = chartSel[key];
+    const svg = svgEl(host, W, H, data.map((d) => d.caption).join('; '));
+    for (let v = step; v <= max + 1e-9; v += step) {
+      add(svg, 'line', { class: 'grid', x1: left, x2: W, y1: y(v), y2: y(v) });
+      add(svg, 'text', { class: 'ax', x: left - 6, y: y(v) + 3.5, 'text-anchor': 'end' }, fmtAxis(v));
+    }
+    add(svg, 'text', { class: 'ax', x: left - 6, y: base + 3.5, 'text-anchor': 'end' }, '0');
+    const g = add(svg, 'g', { class: `bars${sel != null ? ' has-sel' : ''}${grown[key] ? '' : ' grow'}` });
+    grown[key] = true;
+    const bars = []; const axl = []; const tops = [];
+    const every = n > 14 ? 5 : n > 7 ? 2 : 1;
+    data.forEach((d, i) => {
+      const cx = left + slot * i + slot / 2; const x = cx - bw / 2;
+      const yt = y(d.value); const h = base - yt; const r = Math.min(4, h, bw / 2);
+      tops.push([cx, yt]);
+      bars.push(d.value > 0 ? add(g, 'path', { class: `${cls}${i === sel ? ' on' : ''}`, style: `animation-delay:${i * 18}ms`,
+        d: `M${x},${base}V${yt + r}Q${x},${yt} ${x + r},${yt}H${x + bw - r}Q${x + bw},${yt} ${x + bw},${yt + r}V${base}Z` }) : null);
+      axl.push(d.today || (n - 1 - i) % every === 0 ? add(svg, 'text', { class: 'ax', x: cx, y: H - 6, 'text-anchor': 'middle' }, d.label) : null);
+    });
+    const valT = add(svg, 'text', { class: 'val', 'text-anchor': 'middle' });
+    add(svg, 'line', { class: 'base', x1: left, x2: W, y1: base, y2: base });
+    if (avg) {
+      add(svg, 'line', { class: 'avg', x1: left, x2: W, y1: y(avg), y2: y(avg) });
+      add(svg, 'text', { class: 'avg-t', x: W, y: y(avg) - 4, 'text-anchor': 'end' }, 'avg');
+    }
+    // Selecting a bar only restyles it (no redraw), so hovering stays smooth.
+    const select = (i) => {
+      chartSel[key] = i;
+      g.classList.toggle('has-sel', i != null);
+      bars.forEach((el, j) => { if (el) el.classList.toggle('on', j === i); });
+      axl.forEach((el, j) => { if (el) el.classList.toggle('on', j === i); });
+      const k = i == null ? n - 1 : i; const d = data[k];
+      valT.textContent = i != null && d.value > 0 ? d.short : '';
+      valT.setAttribute('x', tops[k][0]); valT.setAttribute('y', Math.max(10, tops[k][1] - 5));
+      cap.textContent = d.caption + (avg ? ' · dashed line is the daily average' : '');
+    };
+    data.forEach((d, i) => {
+      const hit = add(svg, 'rect', { class: 'hit', x: left + slot * i, y: 0, width: slot, height: H });
+      hit.setAttribute('tabindex', '0'); hit.setAttribute('role', 'button'); hit.setAttribute('aria-label', d.caption);
+      const pick = (e) => {
+        if (e && e.type === 'pointerenter' && e.pointerType !== 'mouse') return;
+        select(i);
+        showTip(hit, d.tip.map((t, j) => [t[0], t[1], j === 0 ? color : null]));
+      };
+      hit.addEventListener('click', pick); hit.addEventListener('pointerenter', pick); hit.addEventListener('focus', pick);
+      hit.addEventListener('blur', hideTip);
+      hit.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') hideTip(); });
+    });
+    select(sel);
+  }
+
+  // A meter compares today with the average of earlier days that have something logged.
+  function meter(id, value, avg, text) {
+    $('mt-' + id).style.width = avg ? `${Math.min(100, (value / avg) * 100)}%` : '0%';
+    $('mt-' + id).parentElement.hidden = !avg;
+    $('vs-' + id).textContent = avg ? text : '';
+  }
+
   function renderHome() {
     applyDash();
     const now = Date.now(); const today0 = startOfDay(now); const day0 = now - DAY;
-    const dToday = state.diapers.filter((x) => x.time >= today0);
-    $('st-dia').textContent = String(dToday.length);
-    $('st-pee').textContent = String(dToday.filter(hasPee).length);
-    $('st-poo').textContent = String(dToday.filter(hasPoo).length);
     $('home-date').textContent = new Date(now).toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
-    const todays = state.feeds.filter((x) => x.time >= today0);
-    $('st-oz').textContent = oz(todays.reduce((a, x) => a + x.oz, 0));
-    $('st-feeds').textContent = String(todays.length);
-    const recent = state.feeds.filter((x) => x.time >= day0).sort((a, b) => a.time - b.time);
-    $('st-gap').textContent = recent.length > 1 ? dur((recent[recent.length - 1].time - recent[0].time) / (recent.length - 1)) : '--';
-    const in24 = state.sleeps.map((x) => overlap(x, day0, now, now));
-    $('st-sleep').textContent = dur(in24.reduce((a, b) => a + b, 0));
-    $('st-naps').textContent = String(state.sleeps.filter((x) => x.start >= today0 && isNap(x)).length);
-    const longest = Math.max(0, ...in24);
-    $('st-longest').textContent = longest ? dur(longest) : '--';
 
-    // 24-hour strip: sleep blocks, feed ticks along the top, diaper ticks along the bottom
-    const tl = $('timeline'); tl.innerHTML = '';
-    const pct = (t) => `${((t - day0) / DAY) * 100}%`;
-    (dash.sleep ? state.sleeps : []).filter((x) => sleepEnd(x, now) > day0).forEach((x) => {
-      const el = document.createElement('div'); el.className = 's';
-      const a = Math.max(x.start, day0); el.style.left = pct(a); el.style.width = `${((sleepEnd(x, now) - a) / DAY) * 100}%`;
-      el.title = `Sleep ${clock(x.start)} – ${x.end == null ? 'now' : clock(x.end)} (${dur(sleepEnd(x, now) - x.start)})`;
-      tl.appendChild(el);
-    });
-    (dash.feeds ? state.feeds : []).filter((x) => x.time > day0).forEach((x) => {
-      const el = document.createElement('div'); el.className = 'f'; el.style.left = pct(x.time);
-      el.title = `Feed ${clock(x.time)} · ${oz(x.oz)} oz`; tl.appendChild(el);
-    });
-    (dash.diapers ? state.diapers : []).filter((x) => x.time > day0).forEach((x) => {
-      const el = document.createElement('div'); el.className = 'p'; el.style.left = pct(x.time);
-      el.title = `Diaper ${clock(x.time)} · ${diaperDesc(x)}`; tl.appendChild(el);
-    });
-    tl.querySelectorAll('div').forEach((el) => el.addEventListener('click', () => { $('timeline-cap').textContent = el.title; }));
-    $('timeline-cap').textContent = 'Tap a block or tick for details.';
-    $('timeline-axis').innerHTML = '';
-    [24, 18, 12, 6, 0].forEach((h) => {
-      const sp = document.createElement('span');
-      sp.textContent = h ? new Date(now - h * 3600000).toLocaleTimeString([], { hour: 'numeric' }) : 'now';
-      $('timeline-axis').appendChild(sp);
-    });
-
-    // Last 7 or 14 calendar days, today last
+    // Last 7, 14 or 30 calendar days, today last
     const days = [];
     for (let i = dash.days - 1; i >= 0; i--) {
       const d = new Date(now); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i);
       const a = d.getTime(); const e = new Date(d); e.setDate(e.getDate() + 1); const b = e.getTime();
-      const fs = state.feeds.filter((x) => x.time >= a && x.time < b);
-      days.push({ today: i === 0, name: i === 0 ? 'Today' : d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }),
+      const flist = state.feeds.filter((x) => x.time >= a && x.time < b);
+      const dlist = state.diapers.filter((x) => x.time >= a && x.time < b);
+      days.push({ a, b, flist, dlist, today: i === 0,
+        name: i === 0 ? 'Today' : d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }),
         label: dash.days > 7 ? String(d.getDate()) : i === 0 ? 'Today' : d.toLocaleDateString([], { weekday: 'short' }),
-        oz: fs.reduce((s2, x) => s2 + x.oz, 0), feeds: fs.length,
+        dateShort: d.toLocaleDateString([], { month: 'short', day: 'numeric' }),
+        oz: flist.reduce((s2, x) => s2 + x.oz, 0), feeds: flist.length,
         sleep: state.sleeps.reduce((s2, x) => s2 + overlap(x, a, b, now), 0),
-        ...(() => { const ds = state.diapers.filter((x) => x.time >= a && x.time < b);
-          return { dia: ds.length, pee: ds.filter(hasPee).length, poo: ds.filter(hasPoo).length }; })() });
+        dia: dlist.length, pee: dlist.filter(hasPee).length, poo: dlist.filter(hasPoo).length });
     }
     // Averages use finished days that have something logged, so a half-done today doesn't drag them down.
     const avgOf = (k) => { const full = days.filter((d) => !d.today && d[k] > 0); return full.length ? full.reduce((s2, d) => s2 + d[k], 0) / full.length : null; };
-    const ozAvg = avgOf('oz'); const slAvg = avgOf('sleep'); const diaAvg = avgOf('dia');
-    $('wk-oz-hero').textContent = ozAvg != null ? `avg ${oz(Math.round(ozAvg * 10) / 10)} oz a day` : '';
-    $('wk-sleep-hero').textContent = slAvg != null ? `avg ${dur(slAvg)} a day` : '';
-    barChart($('wk-oz'), $('wk-oz-cap'), 'oz', days.map((d) => ({ value: d.oz, label: d.label, short: `${oz(Math.round(d.oz * 10) / 10)}`,
-      caption: `${d.name}: ${oz(d.oz)} oz in ${d.feeds} ${d.feeds === 1 ? 'feed' : 'feeds'}` })), 'bar-f', ozAvg);
-    barChart($('wk-sleep'), $('wk-sleep-cap'), 'sleep', days.map((d) => ({ value: d.sleep, label: d.label, short: d.sleep ? hours(d.sleep) : '0',
-      caption: `${d.name}: ${dur(d.sleep)} of sleep${d.today ? ' so far' : ''}` })), 'bar-s', slAvg);
-    $('wk-dia-hero').textContent = diaAvg != null ? `avg ${Math.round(diaAvg * 10) / 10} a day` : '';
-    barChart($('wk-dia'), $('wk-dia-cap'), 'dia', days.map((d) => ({ value: d.dia, label: d.label, short: String(d.dia),
-      caption: `${d.name}: ${d.dia} ${d.dia === 1 ? 'change' : 'changes'} (${d.pee} with pee, ${d.poo} with poo)` })), 'bar-d', diaAvg);
+    const ozAvg = avgOf('oz'); const feedAvg = avgOf('feeds'); const slAvg = avgOf('sleep'); const diaAvg = avgOf('dia');
+
+    // Today tiles
+    const td = days[days.length - 1];
+    $('st-oz').textContent = oz(round1(td.oz));
+    $('st-feeds').textContent = String(td.feeds);
+    meter('oz', td.oz, ozAvg, `avg ${oz(round1(ozAvg || 0))} oz/day`);
+    meter('feeds', td.feeds, feedAvg, `avg ${round1(feedAvg || 0)}/day`);
+    const recent = state.feeds.filter((x) => x.time >= day0).sort((a, b) => a.time - b.time);
+    $('st-gap').textContent = recent.length > 1 ? dur((recent[recent.length - 1].time - recent[0].time) / (recent.length - 1)) : '--';
+    const in24 = state.sleeps.map((x) => overlap(x, day0, now, now));
+    const sl24 = in24.reduce((a, b) => a + b, 0);
+    $('st-sleep').textContent = dur(sl24);
+    meter('sleep', sl24, slAvg, `avg ${hours(slAvg || 0)}/day`);
+    $('st-naps').textContent = String(state.sleeps.filter((x) => x.start >= today0 && isNap(x)).length);
+    const longest = Math.max(0, ...in24);
+    $('st-longest').textContent = longest ? dur(longest) : '--';
+    $('st-dia').textContent = String(td.dia); $('st-pee').textContent = String(td.pee); $('st-poo').textContent = String(td.poo);
+    meter('dia', td.dia, diaAvg, `avg ${round1(diaAvg || 0)}/day`);
+
+    renderTimeline(now);
+    renderRhythm(days, now);
+
+    $('wk-oz-hero').innerHTML = ozAvg != null ? `avg <b>${esc(oz(round1(ozAvg)))}</b> oz/day` : '';
+    $('wk-sleep-hero').innerHTML = slAvg != null ? `avg <b>${esc(hours(slAvg))}</b>/day` : '';
+    $('wk-dia-hero').innerHTML = diaAvg != null ? `avg <b>${esc(String(round1(diaAvg)))}</b>/day` : '';
+    barChart($('wk-oz'), $('wk-oz-cap'), 'oz', days.map((d) => ({ value: d.oz, label: d.label, today: d.today, short: oz(round1(d.oz)),
+      caption: `${d.name}: ${oz(d.oz)} oz in ${d.feeds} ${d.feeds === 1 ? 'feed' : 'feeds'}`,
+      tip: [[`${oz(round1(d.oz))} oz`, d.name], [`${d.feeds} ${d.feeds === 1 ? 'feed' : 'feeds'}`, '']] })), 'bar-f', ozAvg, (v) => oz(v), css('--feed-mark'), 4);
+    barChart($('wk-sleep'), $('wk-sleep-cap'), 'sleep', days.map((d) => ({ value: d.sleep / 3600000, label: d.label, today: d.today, short: d.sleep ? hours(d.sleep) : '0',
+      caption: `${d.name}: ${dur(d.sleep)} of sleep${d.today ? ' so far' : ''}`,
+      tip: [[dur(d.sleep), `${d.name}${d.today ? ', so far' : ''}`]] })), 'bar-s', slAvg && slAvg / 3600000, (v) => `${round1(v)}h`, css('--sleep-mark'), 4);
+    barChart($('wk-dia'), $('wk-dia-cap'), 'dia', days.map((d) => ({ value: d.dia, label: d.label, today: d.today, short: String(d.dia),
+      caption: `${d.name}: ${d.dia} ${d.dia === 1 ? 'change' : 'changes'} (${d.pee} with pee, ${d.poo} with poo)`,
+      tip: [[`${d.dia} ${d.dia === 1 ? 'change' : 'changes'}`, d.name], [`${d.pee} pee · ${d.poo} poo`, '']] })), 'bar-d', diaAvg, (v) => String(round1(v)), css('--diaper-mark'), 4);
   }
   $('home-log-feed').addEventListener('click', () => (lastFeed() ? openFeed(false) : setTab('feeds')));
+
+  // ---------- toast + quick log ----------
+  let toastTimer = null;
+  function toast(text) {
+    $('toast-text').textContent = text; $('toast').classList.add('on');
+    try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) {}
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('on'), 2600);
+  }
+  function openQuick() {
+    const a = activeSleep(); const f = lastFeed();
+    $('q-sleep-l').firstChild.textContent = a ? 'Woke up' : 'Start sleep';
+    $('q-sleep-sub').textContent = a ? `Asleep since ${clock(a.start)}` : 'Fell asleep now';
+    $('q-feed-sub').textContent = f ? `Last ${oz(f.oz)} oz at ${clock(f.time)}` : 'Bottle and amount';
+    applyLocks(); hideTip();
+    $('quick-sheet').hidden = false;
+  }
+  const closeQuick = () => { $('quick-sheet').hidden = true; };
+  $('btn-quick').addEventListener('click', openQuick);
+  $('btn-quick-cancel').addEventListener('click', closeQuick);
+  $('quick-sheet').addEventListener('click', (e) => { if (e.target === $('quick-sheet') || (e.target.closest && e.target.closest('[data-log]'))) closeQuick(); });
+  $('q-feed').addEventListener('click', () => { closeQuick(); if (lastFeed()) openFeed(false); else setTab('feeds'); });
+  $('q-sleep').addEventListener('click', () => { closeQuick(); toggleSleep(); });
 
   // ---------- tabs ----------
   const TAB_KEY = 'feeding-tracker.tab';
@@ -1626,6 +2006,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     ['home', 'feeds', 'sleep', 'diaper'].forEach((t) => { $('view-' + t).hidden = tab !== t; });
     $('setup').hidden = has || tab !== 'feeds'; $('clock').hidden = !has; $('history').hidden = !has;
     document.querySelectorAll('.tabs button').forEach((b) => { if (b.dataset.tab === tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+    $('avatar').textContent = (state.name || 'A').trim().charAt(0).toUpperCase() || 'A';
     $('title').textContent = { home: `${state.name}'s day`, feeds: `${state.name}'s feeds`, sleep: `${state.name}'s sleep`, diaper: `${state.name}'s diapers` }[tab];
     $('subtitle').textContent = tab === 'feeds' && !has ? 'Bottle log and next-feed reminder'
       : tab === 'feeds' ? `Every ${dur(state.intervalMin * MIN)} · snooze ${state.snoozeMin} min`
@@ -1663,7 +2044,7 @@ button.big { min-height: 60px; font-size: 1.15rem; width: 100%; }
     if (justLogged && secs % 60 === 0) renderDiaper();
   }, 1000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeFeed(); closeSettings(); closeSleep(); closeDiaper(); } });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeFeed(); closeSettings(); closeSleep(); closeDiaper(); closeQuick(); hideTip(); } });
 })();
 </script>
 </body></html>
