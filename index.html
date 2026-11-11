@@ -349,6 +349,44 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
 .dia-btns button { min-height: 64px; font-size: 1.1rem; border-radius: 18px; }
 .logged { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .25); }
+/* Settings */
+.set-sheet { gap: 18px; padding-bottom: 0; }
+.set-head { display: flex; align-items: center; justify-content: space-between; }
+.set-head h2 { font-size: 1.4rem; font-weight: 800; }
+.set-head .icon-btn { width: 38px; height: 38px; min-height: 38px; border-radius: 12px; box-shadow: none; }
+.set-sec { display: flex; flex-direction: column; gap: 8px; }
+.set-sec[hidden] { display: none; }
+.set-title { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: .95rem; }
+.set-title .pill { margin-left: auto; }
+.set-ic { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; flex: none; }
+.set-ic svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.set-ic.b { background: var(--accent-soft); color: var(--accent); }
+.set-ic.s { background: var(--sleep-soft); color: var(--sleep); }
+.set-ic.d { background: var(--diaper-soft); color: var(--diaper); }
+.set-ic.r { background: var(--due-soft); color: var(--due); }
+.set-card { background: var(--surface-2); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.set-card.danger > div:not([hidden]) ~ div { border-top: 1px solid var(--line); padding-top: 12px; }
+.set-card.danger > div { display: flex; flex-direction: column; gap: 8px; }
+.set-card.danger > [hidden] { display: none; }
+.set-card.danger #btn-leave, .set-card.danger #btn-reset { color: var(--due); border-color: color-mix(in srgb, var(--due) 35%, var(--line)); }
+.set-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.set-row > span { font-weight: 700; font-size: .92rem; flex: none; }
+.set-row.col { flex-direction: column; align-items: stretch; gap: 6px; }
+.set-row input { max-width: 60%; background: var(--surface); }
+.set-row.col input { max-width: none; }
+.set-row small { font-size: .78rem; }
+.set-card select { background: var(--surface); }
+.set-pair { display: flex; gap: 8px; }
+.set-pair select { width: auto; min-width: 92px; }
+.seg-full { display: flex; box-shadow: none; }
+.seg-full button { flex: 1; justify-content: center; min-height: 38px; }
+.seg-full button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.set-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.topic { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; padding: 6px 6px 6px 12px; }
+.topic code { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: .85rem; font-weight: 700; }
+.set-foot { position: sticky; bottom: 0; margin: 0 -20px; padding: 12px 20px calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--glass);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-top: 1px solid var(--line); }
+.set-foot button { flex: 1; }
 .settings-group { background: var(--surface-2) !important; box-shadow: none; }
 </style>
 
@@ -690,49 +728,81 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
 
 <!-- Settings sheet -->
 <div class="scrim" id="settings" hidden>
-  <form class="sheet" id="settings-form" novalidate aria-labelledby="settings-title">
-    <h2 id="settings-title">Settings</h2>
-    <label class="field"><span>Baby's name</span><input id="set-name" type="text" autocomplete="off"></label>
-    <div class="field">
-      <span>Feed every</span>
-      <div class="row">
-        <select id="set-hours" aria-label="Hours"></select>
-        <select id="set-mins" aria-label="Minutes"></select>
+  <form class="sheet set-sheet" id="settings-form" novalidate aria-labelledby="settings-title">
+    <div class="set-head">
+      <h2 id="settings-title">Settings</h2>
+      <button type="button" class="icon-btn" id="btn-set-x" aria-label="Close settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+
+    <section class="set-sec">
+      <div class="set-title"><span class="set-ic b"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>Baby</div>
+      <div class="set-card">
+        <label class="set-row"><span>Name</span><input id="set-name" type="text" autocomplete="off"></label>
       </div>
-    </div>
-    <label class="field"><span>Snooze length</span>
-      <select id="set-snooze">
-        <option value="5">5 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option>
-        <option value="20">20 minutes</option><option value="30">30 minutes</option>
-      </select>
-    </label>
-    <label class="field"><span>Reminder sound</span>
-      <select id="set-sound"><option value="on">Chime</option><option value="off">Silent</option></select>
-    </label>
-    <div class="panel settings-group" id="share-zone" hidden>
-      <span class="label">Share with family</span>
-      <p class="note">Everyone who opens this link sees the same log, countdown and reminders.</p>
-      <div><button type="button" class="small" id="btn-share">Copy share link</button> <span class="note" id="share-note"></span></div>
-    </div>
-    <div class="panel settings-group" id="push-zone" hidden>
-      <span class="label">Phone notifications, even when the app is closed</span>
-      <p class="note">Install the free <strong>ntfy</strong> app (App Store or Google Play), tap <strong>+</strong>, and subscribe to this topic. Keep the server as ntfy.sh.</p>
-      <div><code class="num" id="push-topic"></code> <button type="button" class="small" id="btn-push-copy">Copy topic</button> <button type="button" class="small" id="btn-push-test">Send test</button> <span class="note" id="push-note"></span></div>
-      <p class="note" id="push-status"></p>
-      <p class="note">Everyone subscribed gets a notification whenever a feed, sleep or diaper is logged, edited or deleted, plus the next-feed reminder when it's due.</p>
-      <label class="field"><span>Your name on this phone (optional, shown in those notifications)</span><input id="set-me" type="text" maxlength="30" autocomplete="off" placeholder="e.g. Mom"></label>
-    </div>
-    <div class="panel settings-group" id="leave-panel" hidden>
-      <span class="label">Leave this family</span>
-      <p class="note">Stops sharing on this phone only. Everyone else keeps the shared log.</p>
-      <div id="leave-zone"><button type="button" class="small" id="btn-leave">Leave family</button></div>
-    </div>
-    <div class="panel settings-group">
-      <span class="label">Start over</span>
-      <p class="note" id="reset-note">Clears every logged feed, sleep and diaper on this device.</p>
-      <div id="reset-zone"><button type="button" class="small" id="btn-reset">Clear all data</button></div>
-    </div>
-    <div class="sheet-actions">
+    </section>
+
+    <section class="set-sec">
+      <div class="set-title"><span class="set-ic b"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2h6M10 2v3l-2 3v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V8l-2-3V2M8 12h8"/></svg></span>Feeding reminders</div>
+      <div class="set-card">
+        <div class="set-row"><span>Feed every</span>
+          <div class="set-pair">
+            <select id="set-hours" aria-label="Hours"></select>
+            <select id="set-mins" aria-label="Minutes"></select>
+          </div>
+        </div>
+        <div class="set-row col"><span>Snooze length</span>
+          <select id="set-snooze" hidden>
+            <option value="5">5 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option>
+            <option value="20">20 minutes</option><option value="30">30 minutes</option>
+          </select>
+          <div class="seg seg-full" data-for="set-snooze" role="group" aria-label="Snooze length">
+            <button type="button" data-v="5">5m</button><button type="button" data-v="10">10m</button><button type="button" data-v="15">15m</button><button type="button" data-v="20">20m</button><button type="button" data-v="30">30m</button>
+          </div>
+        </div>
+        <div class="set-row col"><span>Sound when a feed is due</span>
+          <select id="set-sound" hidden><option value="on">Chime</option><option value="off">Silent</option></select>
+          <div class="seg seg-full" data-for="set-sound" role="group" aria-label="Reminder sound">
+            <button type="button" data-v="on">Chime</button><button type="button" data-v="off">Silent</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="set-sec" id="share-zone" hidden>
+      <div class="set-title"><span class="set-ic s"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9.5" r="2.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M15 14.5a5 5 0 0 1 6.5 5"/></svg></span>Family sharing <span class="pill" id="set-sync"><i></i><b></b></span></div>
+      <div class="set-card">
+        <p class="note">Everyone who opens this link sees the same log, countdown and reminders.</p>
+        <div class="set-actions"><button type="button" class="small primary" id="btn-share">Copy share link</button><span class="note" id="share-note"></span></div>
+      </div>
+    </section>
+
+    <section class="set-sec" id="push-zone" hidden>
+      <div class="set-title"><span class="set-ic d"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg></span>Phone notifications</div>
+      <div class="set-card">
+        <p class="note">Get alerts even when the app is closed. Install the free <strong>ntfy</strong> app, tap <strong>+</strong> and subscribe to this topic (server ntfy.sh).</p>
+        <div class="topic"><code class="num" id="push-topic"></code><button type="button" class="small" id="btn-push-copy">Copy</button></div>
+        <div class="set-actions"><button type="button" class="small" id="btn-push-test">Send a test</button><span class="note" id="push-note"></span></div>
+        <p class="note" id="push-status"></p>
+        <label class="set-row col"><span>Your name on this phone</span><input id="set-me" type="text" maxlength="30" autocomplete="off" placeholder="e.g. Mom"><small class="note">Optional. Shown in notifications as "by …".</small></label>
+        <p class="note">Everyone subscribed is notified when a feed, sleep or diaper is logged, edited or deleted, plus the next-feed reminder.</p>
+      </div>
+    </section>
+
+    <section class="set-sec">
+      <div class="set-title"><span class="set-ic r"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span>Careful</div>
+      <div class="set-card danger">
+        <div id="leave-panel" hidden>
+          <div class="set-row col"><span>Leave this family</span><p class="note">Stops sharing on this phone only. Everyone else keeps the shared log.</p></div>
+          <div id="leave-zone"><button type="button" class="small" id="btn-leave">Leave family</button></div>
+        </div>
+        <div>
+          <div class="set-row col"><span>Start over</span><p class="note" id="reset-note">Clears every logged feed, sleep and diaper on this device.</p></div>
+          <div id="reset-zone"><button type="button" class="small" id="btn-reset">Clear all data</button></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="sheet-actions set-foot">
       <button type="button" id="btn-set-cancel">Cancel</button>
       <button class="primary" type="submit">Save settings</button>
     </div>
@@ -1107,6 +1177,9 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
     fillInterval($('set-hours'), $('set-mins'), state.intervalMin);
     $('set-snooze').value = String(state.snoozeMin);
     $('set-sound').value = state.sound;
+    syncSegs();
+    const sy = { live: ['live', 'Live'], connecting: ['', 'Connecting'], offline: ['warn', 'Offline'], error: ['warn', 'Not syncing'] }[syncState] || ['', ''];
+    $('set-sync').className = `pill ${sy[0]}`; $('set-sync').querySelector('b').textContent = sy[1]; $('set-sync').hidden = !sy[1];
     $('share-zone').hidden = !remote;
     $('push-zone').hidden = !remote;
     $('push-topic').textContent = pushTopic() || '';
@@ -1121,6 +1194,18 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
     $('settings').hidden = false;
   });
   const closeSettings = () => { $('settings').hidden = true; };
+  // Segmented buttons drive the hidden selects, so saving reads the same fields as before.
+  function syncSegs() {
+    document.querySelectorAll('#settings .seg[data-for]').forEach((g) => {
+      const v = $(g.dataset.for).value;
+      g.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
+    });
+  }
+  document.querySelectorAll('#settings .seg[data-for] button').forEach((b) => b.addEventListener('click', () => {
+    $(b.closest('.seg').dataset.for).value = b.dataset.v; syncSegs();
+    if (b.dataset.v === 'on') { unlockAudio(); const was = state.sound; state.sound = 'on'; setTimeout(() => { chime(); state.sound = was; }, 60); }
+  }));
+  $('btn-set-x').addEventListener('click', closeSettings);
   $('btn-set-cancel').addEventListener('click', closeSettings);
   $('settings').addEventListener('click', (e) => { if (e.target === $('settings')) closeSettings(); });
   $('settings-form').addEventListener('submit', (e) => {

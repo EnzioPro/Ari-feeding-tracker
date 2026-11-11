@@ -1,5 +1,5 @@
 // Service worker: lets the installed app show reminders with Snooze / Fed buttons.
-const CACHE = 'feeding-tracker-v8';
+const CACHE = 'feeding-tracker-v9';
 const FILES = ['./', './index.html', './manifest.json', './icon.svg', './firebase-config.js'];
 
 self.addEventListener('install', (e) => {
