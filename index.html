@@ -778,7 +778,13 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
 
     <section class="set-sec" id="push-zone" hidden>
       <div class="set-title"><span class="set-ic d"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg></span>Phone notifications</div>
-      <div class="set-card">
+      <div class="set-card" id="push-off" hidden>
+        <p class="note">Phone notifications come through your family's shared log, and this phone hasn't joined it yet. Open the share link someone sent you, or paste it here.</p>
+        <div class="row"><input id="push-join-link" style="flex:2;min-width:0" type="url" placeholder="https://...?family=..." autocomplete="off" aria-label="Share link"><button type="button" class="small primary" id="btn-push-join" style="flex:0 0 auto">Join</button></div>
+        <p class="err" id="push-join-err" hidden></p>
+        <p class="note">Don't have the link? On a phone that already gets notifications, open Settings and tap <strong>Copy share link</strong>.</p>
+      </div>
+      <div class="set-card" id="push-on">
         <p class="note">Get alerts even when the app is closed. Install the free <strong>ntfy</strong> app, tap <strong>+</strong> and subscribe to this topic (server ntfy.sh).</p>
         <div class="topic"><code class="num" id="push-topic"></code><button type="button" class="small" id="btn-push-copy">Copy</button></div>
         <div class="set-actions"><button type="button" class="small" id="btn-push-test">Send a test</button><span class="note" id="push-note"></span></div>
@@ -1180,8 +1186,12 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
     syncSegs();
     const sy = { live: ['live', 'Live'], connecting: ['', 'Connecting'], offline: ['warn', 'Offline'], error: ['warn', 'Not syncing'] }[syncState] || ['', ''];
     $('set-sync').className = `pill ${sy[0]}`; $('set-sync').querySelector('b').textContent = sy[1]; $('set-sync').hidden = !sy[1];
-    $('share-zone').hidden = !remote;
-    $('push-zone').hidden = !remote;
+    // Gate on the family id, not on the live connection: the topic only needs the id, and a phone
+    // that hasn't joined yet still sees the section with a way to join instead of no section at all.
+    $('share-zone').hidden = !familyId;
+    $('push-zone').hidden = !fbConfig;
+    $('push-on').hidden = !familyId; $('push-off').hidden = !!familyId;
+    $('push-join-err').hidden = true; $('push-join-link').value = leftLink || '';
     $('push-topic').textContent = pushTopic() || '';
     $('set-me').value = store.get(ME_KEY) || '';
     $('push-note').textContent = '';
@@ -2112,15 +2122,18 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
   }
   if (fbConfig && (familyId || state.feeds.length || state.sleeps.length || state.diapers.length)) connect();
   else if (fbConfig) { syncState = 'off'; $('join-form').hidden = false; if (leftLink) $('join-link').value = leftLink; }
-  $('join-form').addEventListener('submit', (e) => {
-    e.preventDefault();
+  function joinFrom(input, err) {
+    if (connecting) { err.textContent = 'Still connecting. Try again in a moment.'; err.hidden = false; return false; }
     let id = null;
-    const v = $('join-link').value.trim();
-    try { id = new URL(v).searchParams.get('family'); } catch (err) { id = v; }
-    if (!id || !/^[a-z0-9]{6,40}$/.test(id)) { $('join-err').textContent = 'That doesn\'t look like a share link. Copy it again from Settings on the other phone.'; $('join-err').hidden = false; return; }
+    const v = input.value.trim();
+    try { id = new URL(v).searchParams.get('family'); } catch (e) { id = v; }
+    if (!id || !/^[a-z0-9]{6,40}$/.test(id)) { err.textContent = 'That doesn\'t look like a share link. Copy it again from Settings on the other phone.'; err.hidden = false; return false; }
     store.set(LEFT_KEY, '');
     familyId = id; $('join-form').hidden = true; syncState = 'connecting'; render(); connect();
-  });
+    return true;
+  }
+  $('join-form').addEventListener('submit', (e) => { e.preventDefault(); joinFrom($('join-link'), $('join-err')); });
+  $('btn-push-join').addEventListener('click', () => { if (joinFrom($('push-join-link'), $('push-join-err'))) closeSettings(); });
   let secs = 0;
   setInterval(() => {
     tick(); tickSleep(); tickDiaper(); applyLocks(); secs++;
