@@ -437,6 +437,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
       <p class="note">Paste the share link someone sent you.</p>
       <div class="row"><input id="join-link" type="url" placeholder="https://...?family=..." autocomplete="off"><button type="submit" class="small">Join</button></div>
       <p class="err" id="join-err" hidden></p>
+      <p class="note">First phone in your family? <button type="button" class="small" id="btn-start-family">Start a new family</button></p>
     </form>
 
   <!-- Due alert -->
@@ -779,10 +780,13 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
     <section class="set-sec" id="push-zone" hidden>
       <div class="set-title"><span class="set-ic d"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg></span>Phone notifications</div>
       <div class="set-card" id="push-off" hidden>
-        <p class="note">Phone notifications come through your family's shared log, and this phone hasn't joined it yet. Open the share link someone sent you, or paste it here.</p>
+        <p class="note">Phone notifications come through your family's shared log, and this phone isn't part of one yet. Join an existing family with its share link, or start a new one.</p>
+        <div class="set-row col"><span>Join a family</span></div>
         <div class="row"><input id="push-join-link" style="flex:2;min-width:0" type="url" placeholder="https://...?family=..." autocomplete="off" aria-label="Share link"><button type="button" class="small primary" id="btn-push-join" style="flex:0 0 auto">Join</button></div>
         <p class="err" id="push-join-err" hidden></p>
-        <p class="note">Don't have the link? On a phone that already gets notifications, open Settings and tap <strong>Copy share link</strong>.</p>
+        <p class="note">The link is in Settings on a phone that's already in the family, under <strong>Copy share link</strong>.</p>
+        <div class="set-row col"><span>Start a new family</span><p class="note">For the first phone in a family. This phone gets its own shared log and notification topic, and you can invite others with the share link.</p></div>
+        <div class="set-actions"><button type="button" class="small" id="btn-push-start">Start a new family</button></div>
       </div>
       <div class="set-card" id="push-on">
         <p class="note">Get alerts even when the app is closed. Install the free <strong>ntfy</strong> app, tap <strong>+</strong> and subscribe to this topic (server ntfy.sh).</p>
@@ -948,6 +952,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
   const pushDiaper = (x) => pushRec('diapers', x);
   const removeDiaper = (id) => removeRec('diapers', id);
   let connecting = false;
+  const CREATING_KEY = 'feeding-tracker.creating'; // a family started here that hasn't reached Firebase yet
   let pendingAction = null;
   let feedsFresh = false;
   async function connect() {
@@ -956,8 +961,8 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
       const { initializeApp } = await import(FB + 'firebase-app.js');
       const fs = await import(FB + 'firebase-firestore.js');
       const db = fs.getFirestore(initializeApp(fbConfig));
-      const isNew = !familyId;
-      if (isNew) familyId = newId();
+      const isNew = !familyId || store.get(CREATING_KEY) === familyId;
+      if (!familyId) familyId = newId();
       store.set(FAMILY_KEY, familyId);
       try { history.replaceState(null, '', shareUrl()); } catch (e) {}
       pointManifestAtFamily();
@@ -965,7 +970,8 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
       const feedsCol = fs.collection(famRef, 'feeds');
       remote = { fs, famRef, feedsCol, cols: { sleeps: fs.collection(famRef, 'sleeps'), diapers: fs.collection(famRef, 'diapers') } };
       if (isNew) { // first device: upload what is already logged here
-        if (state.feeds.length) pushSettings();
+        fs.setDoc(famRef, sharedSettings(), { merge: true })
+          .then(() => { if (store.get(CREATING_KEY) === familyId) store.set(CREATING_KEY, ''); }).catch(syncErr);
         state.feeds.forEach(pushFeed);
         Object.keys(RECS).forEach((col) => state[col].forEach((x) => pushRec(col, x)));
       }
@@ -1186,24 +1192,27 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
     syncSegs();
     const sy = { live: ['live', 'Live'], connecting: ['', 'Connecting'], offline: ['warn', 'Offline'], error: ['warn', 'Not syncing'] }[syncState] || ['', ''];
     $('set-sync').className = `pill ${sy[0]}`; $('set-sync').querySelector('b').textContent = sy[1]; $('set-sync').hidden = !sy[1];
-    // Gate on the family id, not on the live connection: the topic only needs the id, and a phone
-    // that hasn't joined yet still sees the section with a way to join instead of no section at all.
-    $('share-zone').hidden = !familyId;
-    $('push-zone').hidden = !fbConfig;
-    $('push-on').hidden = !familyId; $('push-off').hidden = !!familyId;
+    renderFamilyZones();
     $('push-join-err').hidden = true; $('push-join-link').value = leftLink || '';
-    $('push-topic').textContent = pushTopic() || '';
     $('set-me').value = store.get(ME_KEY) || '';
     $('push-note').textContent = '';
     renderPushStatus();
     $('share-note').textContent = '';
     $('reset-note').textContent = (remote ? 'Clears every logged feed, sleep and diaper for everyone sharing this log.' : 'Clears every logged feed, sleep and diaper on this device.') + ' You can undo it for 24 hours.';
     resetIdle();
-    $('leave-panel').hidden = !familyId;
     leaveIdle();
     $('settings').hidden = false;
   });
   const closeSettings = () => { $('settings').hidden = true; };
+  // Gate on the family id, not on the live connection: the topic only needs the id, and a phone
+  // that isn't in a family yet still sees the section, with ways to join or start one.
+  function renderFamilyZones() {
+    $('share-zone').hidden = !familyId;
+    $('push-zone').hidden = !fbConfig;
+    $('push-on').hidden = !familyId; $('push-off').hidden = !!familyId;
+    $('push-topic').textContent = pushTopic() || '';
+    $('leave-panel').hidden = !familyId;
+  }
   // Segmented buttons drive the hidden selects, so saving reads the same fields as before.
   function syncSegs() {
     document.querySelectorAll('#settings .seg[data-for]').forEach((g) => {
@@ -2134,6 +2143,20 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
   }
   $('join-form').addEventListener('submit', (e) => { e.preventDefault(); joinFrom($('join-link'), $('join-err')); });
   $('btn-push-join').addEventListener('click', () => { if (joinFrom($('push-join-link'), $('push-join-err'))) closeSettings(); });
+  // Starting a family picks the id right away, so Settings can show the new topic and share link
+  // without waiting for Firebase; connect() then creates the family and uploads anything already logged here.
+  function startFamily(err) {
+    if (connecting || familyId) { if (err) { err.textContent = 'Still connecting. Try again in a moment.'; err.hidden = false; } return false; }
+    store.set(LEFT_KEY, '');
+    familyId = newId(); store.set(FAMILY_KEY, familyId); store.set(CREATING_KEY, familyId);
+    $('join-form').hidden = true; syncState = 'connecting'; render(); connect();
+    return true;
+  }
+  $('btn-start-family').addEventListener('click', () => { if (startFamily($('join-err'))) { $('btn-settings').click(); $('push-zone').scrollIntoView({ block: 'start' }); } });
+  $('btn-push-start').addEventListener('click', () => {
+    if (!startFamily($('push-join-err'))) return;
+    renderFamilyZones(); $('push-note').textContent = 'New family started. Subscribe to this topic in the ntfy app.';
+  });
   let secs = 0;
   setInterval(() => {
     tick(); tickSleep(); tickDiaper(); applyLocks(); secs++;
