@@ -1,5 +1,5 @@
 // Service worker: lets the installed app show reminders with Snooze / Fed buttons.
-const CACHE = 'feeding-tracker-v9';
+const CACHE = 'feeding-tracker-v10';
 const FILES = ['./', './index.html', './manifest.json', './icon.svg', './firebase-config.js'];
 
 self.addEventListener('install', (e) => {
@@ -14,7 +14,7 @@ self.addEventListener('fetch', (e) => {
 });
 self.addEventListener('notificationclick', (e) => {
   e.notification.close();
-  const action = e.action || 'fed';
+  const action = e.action || (e.notification.data && e.notification.data.action) || 'fed';
   e.waitUntil((async () => {
     const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     if (all.length) {

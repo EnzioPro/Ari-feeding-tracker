@@ -39,6 +39,10 @@
   --diaper-ink: #ffffff;
   --diaper-soft: #f8ecd9;
   --diaper-mark: #a8650a;
+  --screen: #a8327a;
+  --screen-ink: #ffffff;
+  --screen-soft: #f8e2ef;
+  --screen-mark: #a8327a;
   --shadow: 0 1px 2px rgb(20 27 43 / .04), 0 6px 24px -8px rgb(20 27 43 / .10);
   --shadow-lg: 0 10px 40px -10px rgb(20 27 43 / .28);
   --glass: rgb(255 255 255 / .78);
@@ -53,6 +57,7 @@
     --due: #ff9a62; --due-soft: #3a2418; --ok: #5fd39a; --ok-soft: #173326; color-scheme: dark;
     --sleep: #46c9b1; --sleep-ink: #0b0f1a; --sleep-soft: #143533; --feed-mark: #5a86e6; --sleep-mark: #1f9a85;
     --diaper: #e0a84f; --diaper-ink: #0b0f1a; --diaper-soft: #372b17; --diaper-mark: #bf8420;
+    --screen: #ee8cc4; --screen-ink: #0b0f1a; --screen-soft: #3a1c2f; --screen-mark: #d0619f;
     --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 24px -10px rgb(0 0 0 / .5); --shadow-lg: 0 12px 40px -8px rgb(0 0 0 / .7); --glass: rgb(22 28 44 / .8);
   }
 }
@@ -62,6 +67,7 @@
   --due: #ff9a62; --due-soft: #3a2418; --ok: #5fd39a; --ok-soft: #173326; color-scheme: dark;
   --sleep: #46c9b1; --sleep-ink: #0b0f1a; --sleep-soft: #143533; --feed-mark: #5a86e6; --sleep-mark: #1f9a85;
   --diaper: #e0a84f; --diaper-ink: #0b0f1a; --diaper-soft: #372b17; --diaper-mark: #bf8420;
+  --screen: #ee8cc4; --screen-ink: #0b0f1a; --screen-soft: #3a1c2f; --screen-mark: #d0619f;
   --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 24px -10px rgb(0 0 0 / .5); --shadow-lg: 0 12px 40px -8px rgb(0 0 0 / .7); --glass: rgb(22 28 44 / .8);
 }
 * { box-sizing: border-box; }
@@ -106,6 +112,7 @@ button:active:not(:disabled) { transform: scale(.97); }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 button.primary { background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, var(--accent-2))); border-color: transparent; color: var(--accent-ink); box-shadow: 0 6px 16px -8px var(--accent); }
 button.diaper { background: var(--diaper); border-color: transparent; color: var(--diaper-ink); box-shadow: 0 6px 16px -10px var(--diaper); }
+button.screen { background: var(--screen); border-color: transparent; color: var(--screen-ink); box-shadow: 0 6px 16px -10px var(--screen); }
 button.sleep { background: var(--sleep); border-color: transparent; color: var(--sleep-ink); box-shadow: 0 6px 16px -10px var(--sleep); }
 button:disabled { opacity: .45; cursor: default; box-shadow: none; }
 button.due { background: var(--due); border-color: var(--due); color: #fff; }
@@ -161,6 +168,9 @@ input, select {
 .entry::before, .sentry::before { content: ""; position: absolute; left: 6px; top: 10px; bottom: 10px; width: 4px; border-radius: 2px; background: var(--feed-mark); }
 #sleep-log .sentry::before { background: var(--sleep-mark); }
 #diaper-log .sentry::before { background: var(--diaper-mark); }
+#screen-log .sentry::before { background: var(--screen-mark); }
+#screen-log .sentry.live { background: var(--screen-soft); }
+#screen-log .sentry.live .tag { color: var(--screen); }
 .entry { display: grid; grid-template-columns: 5.3em 4.2em 1fr auto; gap: 8px; align-items: center; }
 .entry .t { font-weight: 700; }
 .entry .gap { color: var(--muted); font-size: .82rem; }
@@ -195,6 +205,8 @@ input, select {
 .qbtn.f svg { color: var(--feed-mark); }
 .qbtn.s { background: var(--sleep-soft); color: var(--ink); }
 .qbtn.s svg { color: var(--sleep); }
+.qbtn.c { grid-column: 1 / -1; flex-direction: row; align-items: center; min-height: 64px; background: var(--screen-soft); color: var(--ink); }
+.qbtn.c svg { color: var(--screen); flex: none; }
 .quick-dia { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .quick-dia button { min-height: 52px; }
 
@@ -255,6 +267,14 @@ input, select {
 .now-card .chip-ic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .now-card.sl .chip-ic { background: var(--sleep-soft); color: var(--sleep); }
 .now-card.di .chip-ic { background: var(--diaper-soft); color: var(--diaper); }
+.now-card.sc { grid-column: 1 / -1; }
+.now-card.sc .chip-ic { background: var(--screen-soft); color: var(--screen); }
+.now-card.is-on { background: var(--screen-soft); border-color: transparent; }
+.now-card.is-on .chip-ic { background: var(--screen); color: var(--screen-ink); }
+.now-card.is-up { border: 1.5px solid var(--due); }
+.sc-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.sc-row > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.sc-row .dbtns { flex: 0 1 auto; margin-top: 0; }
 .now-card > button, .now-card .dbtns { margin-top: auto; }
 .now-card .note { margin-bottom: 8px; overflow-wrap: anywhere; }
 .dbtns { display: flex; gap: 6px; }
@@ -276,9 +296,11 @@ input, select {
 .tile .meter { background: color-mix(in srgb, var(--feed-mark) 16%, transparent); }
 .tile.s .meter { background: color-mix(in srgb, var(--sleep-mark) 16%, transparent); }
 .tile.d .meter { background: color-mix(in srgb, var(--diaper-mark) 16%, transparent); }
+.tile.c .meter { background: color-mix(in srgb, var(--screen-mark) 16%, transparent); }
 .meter b { display: block; height: 100%; border-radius: 3px; background: var(--feed-mark); width: 0; transition: width .6s cubic-bezier(.2, .8, .2, 1); }
 .tile.s .meter b { background: var(--sleep-mark); }
 .tile.d .meter b { background: var(--diaper-mark); }
+.tile.c .meter b { background: var(--screen-mark); }
 .tile .vs { font-size: .72rem; color: var(--faint); font-weight: 600; margin-top: 3px; }
 .legend { display: flex; gap: 12px; font-size: .78rem; color: var(--muted); flex-wrap: wrap; font-weight: 600; }
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
@@ -302,6 +324,7 @@ input, select {
 .chart .bar-f { fill: var(--feed-mark); }
 .chart .bar-s { fill: var(--sleep-mark); }
 .chart .bar-d { fill: var(--diaper-mark); }
+.chart .bar-c { fill: var(--screen-mark); }
 .chart .bars path { transition: opacity .2s; }
 .chart .bars.has-sel path:not(.on) { opacity: .45; }
 .chart .hit, .viz .hit { fill: transparent; cursor: pointer; outline: none; }
@@ -315,6 +338,7 @@ input, select {
 .viz .s-blk { fill: var(--sleep-mark); }
 .viz .f-dot { fill: var(--feed-mark); stroke: var(--surface); stroke-width: 2; }
 .viz .d-tick { fill: var(--diaper-mark); }
+.viz .c-blk { fill: var(--screen-mark); }
 .viz .now { stroke: var(--ink); stroke-width: 1.5; }
 .viz .now-t { fill: var(--ink); font-size: 9.5px; font-weight: 800; font-family: var(--font-body); }
 .viz .mk { cursor: pointer; transition: opacity .15s; }
@@ -349,6 +373,14 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
 .dia-btns button { min-height: 64px; font-size: 1.1rem; border-radius: 18px; }
 .logged { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .25); }
+/* Screen time */
+.sleep-hero .moon.scr { background: var(--screen-soft); color: var(--screen); }
+.sleep-hero.is-on .moon.scr { background: var(--screen); color: var(--screen-ink); box-shadow: 0 10px 24px -10px var(--screen); }
+.sleep-hero.is-up .countdown { color: var(--due); }
+.scr-bar { height: 8px; border-radius: 4px; background: color-mix(in srgb, var(--screen-mark) 18%, transparent); overflow: hidden; }
+.scr-bar b { display: block; height: 100%; width: 0; background: var(--screen-mark); border-radius: 4px; transition: width .6s ease; }
+.scr-bar.up b { background: var(--due); }
+.scr-more { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 /* Settings */
 .set-sheet { gap: 18px; padding-bottom: 0; }
 .set-head { display: flex; align-items: center; justify-content: space-between; }
@@ -450,6 +482,16 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
     </div>
   </section>
 
+  <!-- Screen timer alert -->
+  <section class="alert" id="screen-alert" hidden role="alert">
+    <h2 id="screen-alert-title">Screen time is up</h2>
+    <p id="screen-alert-body"></p>
+    <div class="row">
+      <button class="due" id="btn-screen-alert-off" type="button">Screen off</button>
+      <button id="btn-screen-alert-more" type="button">5 more min</button>
+    </div>
+  </section>
+
   <!-- Home dashboard -->
   <div id="view-home" class="view" hidden>
     <div class="filters" aria-label="Choose what the dashboard shows">
@@ -457,6 +499,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
         <button type="button" data-kind="feeds"><i style="background:var(--feed-mark)"></i>Feeds</button>
         <button type="button" data-kind="sleep"><i style="background:var(--sleep-mark)"></i>Sleep</button>
         <button type="button" data-kind="diapers"><i style="background:var(--diaper-mark)"></i>Diapers</button>
+        <button type="button" data-kind="screen"><i style="background:var(--screen-mark)"></i>Screen</button>
       </div>
       <div class="seg" id="dash-days" role="group" aria-label="Chart range">
         <button type="button" data-days="7">7d</button>
@@ -501,6 +544,20 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
           <button class="diaper small" type="button" data-log="both">Both</button>
         </div>
       </div>
+      <div class="now-card sc" id="home-screen-card" data-show="screen">
+        <div class="chip-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+        <div class="sc-row">
+          <div>
+            <span class="label" id="home-screen-label">Screen time today</span>
+            <span class="big num" id="home-screen-big">--</span>
+            <span class="note" id="home-screen-sub"></span>
+          </div>
+          <div class="dbtns">
+            <button class="small" id="home-screen-more" type="button" hidden>+5 min</button>
+            <button class="screen small" id="home-screen-toggle" type="button">Start screen time</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <section class="panel">
@@ -520,6 +577,11 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
         <div class="tile d"><div class="v" id="st-pee">0</div><div class="k">with pee</div></div>
         <div class="tile d"><div class="v" id="st-poo">0</div><div class="k">with poo</div></div>
       </div>
+      <div class="tiles" data-show="screen">
+        <div class="tile c"><div class="v" id="st-scr">0m</div><div class="k">screen today</div><div class="meter"><b id="mt-scr"></b></div><div class="vs" id="vs-scr"></div></div>
+        <div class="tile c"><div class="v" id="st-scr-n">0</div><div class="k">sessions today</div></div>
+        <div class="tile c"><div class="v" id="st-scr-long">--</div><div class="k">longest today</div></div>
+      </div>
     </section>
 
     <section class="panel">
@@ -530,7 +592,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
 
     <section class="panel">
       <div class="chart-head"><h2>Daily rhythm</h2>
-        <span class="legend"><span data-show="sleep"><i style="background:var(--sleep-mark)"></i>Sleep</span><span data-show="feeds"><i class="dot" style="background:var(--feed-mark)"></i>Feed</span><span data-show="diapers"><i class="tick" style="background:var(--diaper-mark)"></i>Diaper</span></span></div>
+        <span class="legend"><span data-show="sleep"><i style="background:var(--sleep-mark)"></i>Sleep</span><span data-show="feeds"><i class="dot" style="background:var(--feed-mark)"></i>Feed</span><span data-show="diapers"><i class="tick" style="background:var(--diaper-mark)"></i>Diaper</span><span data-show="screen"><i style="background:var(--screen-mark)"></i>Screen</span></span></div>
       <div class="viz" id="rhythm"></div>
       <p class="chart-cap" id="rhythm-cap"></p>
     </section>
@@ -551,6 +613,11 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
         <div class="chart-head"><span class="label">Diapers per day</span><span class="hero" id="wk-dia-hero"></span></div>
         <div id="wk-dia"></div>
         <p class="chart-cap" id="wk-dia-cap"></p>
+      </div>
+      <div class="chart" data-show="screen">
+        <div class="chart-head"><span class="label">Screen time per day</span><span class="hero" id="wk-scr-hero"></span></div>
+        <div id="wk-scr"></div>
+        <p class="chart-cap" id="wk-scr-cap"></p>
       </div>
     </section>
   </div>
@@ -637,6 +704,37 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
       <div id="diaper-log"></div>
     </section>
   </div>
+
+  <!-- Screen time -->
+  <div id="view-screen" class="view" hidden>
+    <section class="panel">
+      <div class="sleep-hero" id="screen-hero">
+        <div class="moon scr" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+        <div class="label" id="screen-state">No screen right now</div>
+        <div class="countdown num" id="screen-timer">--</div>
+        <p class="sub" id="screen-since"></p>
+      </div>
+      <div class="scr-bar" id="screen-bar" hidden><b id="screen-bar-fill"></b></div>
+      <div class="field" id="screen-pick">
+        <span>Timer</span>
+        <div class="chips toggles" id="screen-mins"></div>
+        <span>Watching on (optional)</span>
+        <div class="chips toggles" id="screen-on"></div>
+      </div>
+      <button class="screen big" id="btn-screen-toggle" type="button">Start screen time</button>
+      <div class="scr-more" id="screen-more" hidden>
+        <button type="button" data-more="5">+5 min</button>
+        <button type="button" data-more="15">+15 min</button>
+      </div>
+      <div><button class="small" id="btn-screen-add" type="button">Add earlier screen time</button></div>
+      <p class="note" id="screen-push-note"></p>
+      <p class="note" id="screen-sync-note" hidden></p>
+    </section>
+    <section class="panel">
+      <div class="top"><h2>Screen time log</h2><span class="sub" id="screen-count"></span></div>
+      <div id="screen-log"></div>
+    </section>
+  </div>
 </main>
 
 <nav class="tabs" id="tabs" aria-label="Sections">
@@ -646,6 +744,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
     <button type="button" class="fab" id="btn-quick" aria-label="Quick log"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
     <button type="button" data-tab="sleep"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>Sleep</button>
     <button type="button" data-tab="diaper"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v4a9 9 0 0 1-18 0zM8 6v3a4 4 0 0 0 8 0V6"/></svg>Diapers</button>
+    <button type="button" data-tab="screen"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Screen</button>
   </div>
 </nav>
 
@@ -656,6 +755,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
     <div class="quick">
       <button type="button" class="qbtn f" id="q-feed"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2h6M10 2v3l-2 3v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V8l-2-3V2M8 12h8"/></svg><span>Feed<small id="q-feed-sub">Bottle and amount</small></span></button>
       <button type="button" class="qbtn s" id="q-sleep"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><span id="q-sleep-l">Start sleep<small id="q-sleep-sub">Fell asleep now</small></span></button>
+      <button type="button" class="qbtn c" id="q-screen"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span id="q-screen-l">Start screen time<small id="q-screen-sub">30 min timer</small></span></button>
     </div>
     <span class="label">Diaper change, now</span>
     <div class="quick-dia">
@@ -670,6 +770,24 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
 
 <div class="toast" id="toast" role="status" aria-live="polite"><i aria-hidden="true">✓</i><span id="toast-text"></span></div>
 <div class="tip" id="tip" aria-hidden="true"></div>
+
+<!-- Screen time sheet -->
+<div class="scrim" id="screen-sheet" hidden>
+  <form class="sheet" id="screen-form" novalidate aria-labelledby="screen-sheet-title">
+    <h2 id="screen-sheet-title">Add screen time</h2>
+    <p class="sub" id="screen-sheet-sub">Leave "Ended" empty if the screen is still on.</p>
+    <div class="row">
+      <label class="field"><span>Started</span><input id="screen-start" type="datetime-local" required></label>
+      <label class="field"><span>Ended</span><input id="screen-end" type="datetime-local"></label>
+    </div>
+    <div class="field"><span>Watching on (optional)</span><div class="chips toggles" id="screen-sheet-on"></div></div>
+    <p class="err" id="screen-err" hidden></p>
+    <div class="sheet-actions">
+      <button type="button" id="btn-screen-cancel">Cancel</button>
+      <button class="primary" type="submit" id="btn-screen-save">Save</button>
+    </div>
+  </form>
+</div>
 
 <!-- Diaper sheet -->
 <div class="scrim" id="diaper-sheet" hidden>
@@ -794,7 +912,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
         <div class="set-actions"><button type="button" class="small" id="btn-push-test">Send a test</button><span class="note" id="push-note"></span></div>
         <p class="note" id="push-status"></p>
         <label class="set-row col"><span>Your name on this phone</span><input id="set-me" type="text" maxlength="30" autocomplete="off" placeholder="e.g. Mom"><small class="note">Optional. Shown in notifications as "by …".</small></label>
-        <p class="note">Everyone subscribed is notified when a feed, sleep or diaper is logged, edited or deleted, plus the next-feed reminder.</p>
+        <p class="note">Everyone subscribed is notified when a feed, sleep, diaper or screen time is logged, edited or deleted, plus the next-feed reminder and the screen timer.</p>
       </div>
     </section>
 
@@ -806,7 +924,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
           <div id="leave-zone"><button type="button" class="small" id="btn-leave">Leave family</button></div>
         </div>
         <div>
-          <div class="set-row col"><span>Start over</span><p class="note" id="reset-note">Clears every logged feed, sleep and diaper on this device.</p></div>
+          <div class="set-row col"><span>Start over</span><p class="note" id="reset-note">Clears every logged feed, sleep, diaper and screen time on this device.</p></div>
           <div id="reset-zone"><button type="button" class="small" id="btn-reset">Clear all data</button></div>
         </div>
       </div>
@@ -827,7 +945,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
   const $ = (id) => document.getElementById(id);
 
   // ---------- state ----------
-  const blank = () => ({ name: 'Ari', intervalMin: 180, snoozeMin: 15, sound: 'on', feeds: [], snoozeUntil: null, alertedFor: null, sleeps: [], sleepUnsynced: [], diapers: [], diaperUnsynced: [] });
+  const blank = () => ({ name: 'Ari', intervalMin: 180, snoozeMin: 15, sound: 'on', feeds: [], snoozeUntil: null, alertedFor: null, sleeps: [], sleepUnsynced: [], diapers: [], diaperUnsynced: [], screens: [], screenUnsynced: [] });
   let state = blank();
   let memoryOnly = false;
   try {
@@ -855,7 +973,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
     let fromUrl = new URLSearchParams(location.search).get('family');
     if (fromUrl && fromUrl === store.get(LEFT_KEY) && !store.get(FAMILY_KEY)) { leftLink = location.href; fromUrl = null; } // e.g. a home-screen icon still pointing at a family this phone left
     familyId = (fromUrl && /^[a-z0-9]{6,40}$/.test(fromUrl) ? fromUrl : null) || store.get(FAMILY_KEY);
-    if (familyId && familyId !== store.get(FAMILY_KEY) && fromUrl) { state.feeds = []; state.sleeps = []; state.sleepUnsynced = []; state.diapers = []; state.diaperUnsynced = []; } // joined someone else's log
+    if (familyId && familyId !== store.get(FAMILY_KEY) && fromUrl) { state.feeds = []; state.sleeps = []; state.sleepUnsynced = []; state.diapers = []; state.diaperUnsynced = []; state.screens = []; state.screenUnsynced = []; } // joined someone else's log
   }
   function pointManifestAtFamily() {
     const link = document.querySelector('link[rel="manifest"]');
@@ -912,6 +1030,30 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
     fetch(`${NTFY}${topic}/${id}`, { method: 'POST', body: me ? `${body.replace(/\.$/, "")} · by ${me}` : body,
       headers: { Title: ascii(title), Tags: tags, Click: shareUrl() } }).catch(() => {});
   }
+  // Screen timer: when screen time starts with a timer, its end is booked on ntfy under one fixed
+  // sequence ID, so "+5 min" re-books the same message and "Screen off" cancels it. Every phone that
+  // sees the running session from the server books the same message, so a failed request is retried.
+  const SCREEN_BOOKED_KEY = 'feeding-tracker.screenBooked';
+  function bookScreenTimer(onlyIfChanged) {
+    const topic = pushTopic(); if (!topic) return;
+    const a = activeScreen(); const e = timerEnd(a);
+    if (!e || e < Date.now() + 15000) return;
+    const key = `${topic}|${a.id}|${e}|${state.name}`;
+    if (onlyIfChanged && store.get(SCREEN_BOOKED_KEY) === key) return;
+    const link = shareUrl();
+    fetch(`${NTFY}${topic}/screen-timer`, { method: 'POST',
+      body: `The ${a.limitMin} min timer${a.on ? ` on ${a.on}` : ''} ended (started ${clock(a.start)}). Tap to turn the screen off in the app.`,
+      headers: { At: String(Math.round(e / 1000)), Title: ascii(`Screen time is up for ${state.name}`), Priority: 'high', Tags: 'tv,alarm_clock',
+        Click: `${link}#screen`, Actions: `view, Screen off, ${link}#screenoff; view, 5 more min, ${link}#screenmore` } })
+      .then((r) => { if (!r.ok) throw new Error(r.status); store.set(SCREEN_BOOKED_KEY, key); })
+      .catch(() => { store.set(SCREEN_BOOKED_KEY, ''); });
+  }
+  // A timer that already went off is left alone: deleting it would also clear the notification ntfy just delivered.
+  function cancelScreenTimer(x) {
+    store.set(SCREEN_BOOKED_KEY, '');
+    const topic = pushTopic(); const e = timerEnd(x);
+    if (topic && e && e > Date.now() + 5000) fetch(`${NTFY}${topic}/screen-timer`, { method: 'DELETE' }).catch(() => {});
+  }
   const shareUrl = () => { const u = new URL(location.href); u.hash = ''; u.search = ''; u.searchParams.set('family', familyId); return u.toString(); };
   const sharedSettings = () => ({ name: state.name, intervalMin: state.intervalMin, snoozeMin: state.snoozeMin, snoozeUntil: state.snoozeUntil || null, updatedAt: Date.now() });
   const syncErr = () => { syncState = 'error'; renderSync(); };
@@ -928,8 +1070,12 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
     diapers: { pending: 'diaperUnsynced',
       toDoc: (x) => ({ time: x.time, kind: x.kind, color: x.color || '', texture: x.texture || '', rash: !!x.rash, note: x.note || '' }),
       fromDoc: (id, d) => ({ id, time: d.time, kind: d.kind, color: d.color || '', texture: d.texture || '', rash: !!d.rash, note: d.note || '' }) },
+    // families/{id}/screens: { start, end, limitMin, on }, end is null while the screen is on
+    screens: { pending: 'screenUnsynced',
+      toDoc: (x) => ({ start: x.start, end: x.end == null ? null : x.end, limitMin: x.limitMin || null, on: x.on || '' }),
+      fromDoc: (id, d) => ({ id, start: d.start, end: d.end == null ? null : d.end, limitMin: d.limitMin || null, on: d.on || '' }) },
   };
-  const recSync = { sleeps: 'ok', diapers: 'ok' };
+  const recSync = { sleeps: 'ok', diapers: 'ok', screens: 'ok' };
   const recErr = (col) => () => { recSync[col] = 'error'; renderRecSync(); };
   const markRec = (col, id, pending) => {
     const k = RECS[col].pending;
@@ -951,9 +1097,12 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
   const removeSleep = (id) => removeRec('sleeps', id);
   const pushDiaper = (x) => pushRec('diapers', x);
   const removeDiaper = (id) => removeRec('diapers', id);
+  const pushScreen = (x) => pushRec('screens', x);
+  const removeScreen = (id) => removeRec('screens', id);
   let connecting = false;
   const CREATING_KEY = 'feeding-tracker.creating'; // a family started here that hasn't reached Firebase yet
   let pendingAction = null;
+  let pendingScreen = null; // "Screen off" / "5 more min" tapped in a notification, run once the latest log arrives
   let feedsFresh = false;
   async function connect() {
     connecting = true;
@@ -968,7 +1117,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
       pointManifestAtFamily();
       const famRef = fs.doc(db, 'families', familyId);
       const feedsCol = fs.collection(famRef, 'feeds');
-      remote = { fs, famRef, feedsCol, cols: { sleeps: fs.collection(famRef, 'sleeps'), diapers: fs.collection(famRef, 'diapers') } };
+      remote = { fs, famRef, feedsCol, cols: { sleeps: fs.collection(famRef, 'sleeps'), diapers: fs.collection(famRef, 'diapers'), screens: fs.collection(famRef, 'screens') } };
       if (isNew) { // first device: upload what is already logged here
         fs.setDoc(famRef, sharedSettings(), { merge: true })
           .then(() => { if (store.get(CREATING_KEY) === familyId) store.set(CREATING_KEY, ''); }).catch(syncErr);
@@ -1008,6 +1157,10 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
           if (recSync[col] === 'error') recSync[col] = 'ok';
           saveLocal(); render();
           if (!resent) { resent = true; pending.forEach((x) => pushRec(col, x)); }
+          if (col === 'screens' && !q.metadata.fromCache) {
+            if (!q.metadata.hasPendingWrites) bookScreenTimer(true);
+            if (pendingScreen) { const a = pendingScreen; pendingScreen = null; setTimeout(() => handleAction(a), 300); }
+          }
         }, recErr(col));
       });
     } catch (e) { syncErr(); }
@@ -1108,6 +1261,9 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
   function handleAction(action) {
     if (action === 'snooze') snooze();
     else if (action === 'fed') openFeed(true);
+    else if (action === 'screen') setTab('screen');
+    else if (action === 'screenoff') { setTab('screen'); endScreen(); }
+    else if (action === 'screenmore') { setTab('screen'); extendScreen(5); }
   }
 
   // ---------- actions ----------
@@ -1198,7 +1354,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
     $('push-note').textContent = '';
     renderPushStatus();
     $('share-note').textContent = '';
-    $('reset-note').textContent = (remote ? 'Clears every logged feed, sleep and diaper for everyone sharing this log.' : 'Clears every logged feed, sleep and diaper on this device.') + ' You can undo it for 24 hours.';
+    $('reset-note').textContent = (remote ? 'Clears every logged feed, sleep, diaper and screen time for everyone sharing this log.' : 'Clears every logged feed, sleep, diaper and screen time on this device.') + ' You can undo it for 24 hours.';
     resetIdle();
     leaveIdle();
     $('settings').hidden = false;
@@ -1243,7 +1399,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
   // the family, stops booking reminders and starts again with an empty local log.
   function leaveIdle() { $('leave-zone').innerHTML = '<button type="button" class="small" id="btn-leave">Leave family</button>'; $('btn-leave').onclick = leaveAsk; }
   function leaveAsk() {
-    const unsynced = state.sleepUnsynced.length + state.diaperUnsynced.length;
+    const unsynced = state.sleepUnsynced.length + state.diaperUnsynced.length + state.screenUnsynced.length;
     $('leave-zone').innerHTML = `<div class="confirm-clear">
       <p class="note"><strong>Leave the family log on this phone?</strong></p>
       <p class="note">This phone stops syncing and stops booking feeding reminders, and its copy of the log is cleared. Nothing is deleted for anyone else. To stop notifications too, unsubscribe from the topic in the ntfy app. You can rejoin later by pasting the share link.</p>
@@ -1255,8 +1411,8 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
   function leaveFamily() {
     store.set(LEFT_KEY, familyId);
     store.set(undoKey(), '');
-    store.set(FAMILY_KEY, ''); store.set(BOOKED_KEY, '');
-    Object.assign(state, { feeds: [], sleeps: [], sleepUnsynced: [], diapers: [], diaperUnsynced: [], snoozeUntil: null, alertedFor: null });
+    store.set(FAMILY_KEY, ''); store.set(BOOKED_KEY, ''); store.set(SCREEN_BOOKED_KEY, '');
+    Object.assign(state, { feeds: [], sleeps: [], sleepUnsynced: [], diapers: [], diaperUnsynced: [], screens: [], screenUnsynced: [], snoozeUntil: null, alertedFor: null });
     saveLocal();
     // A fresh load drops the Firestore listeners and the family share link in one go.
     location.replace(location.pathname);
@@ -1267,13 +1423,14 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
   // shared (on this phone otherwise); a newer clear replaces it and it is dropped after a day.
   const UNDO_WORD = 'DELETE';
   const undoKey = () => `feeding-tracker.undo.${familyId || 'local'}`;
-  let undo = null; // { feeds, sleeps, diapers, name, intervalMin, snoozeMin, clearedAt, by }
+  let undo = null; // { feeds, sleeps, diapers, screens, name, intervalMin, snoozeMin, clearedAt, by }
   const loadUndo = () => { try { undo = JSON.parse(store.get(undoKey()) || 'null'); } catch (e) { undo = null; } };
   const keepUndo = () => store.set(undoKey(), undo ? JSON.stringify(undo) : '');
   const undoRef = () => remote.fs.doc(remote.famRef, 'undo', 'latest');
   const undoLive = () => !!(undo && undo.clearedAt && Date.now() < undo.clearedAt + DAY);
   const countLabel = (n, one, many) => `${n} ${n === 1 ? one : many}`;
-  const contents = (u) => [countLabel(u.feeds.length, 'feed', 'feeds'), countLabel(u.sleeps.length, 'sleep', 'sleeps'), countLabel(u.diapers.length, 'diaper change', 'diaper changes')].join(', ');
+  const contents = (u) => [countLabel(u.feeds.length, 'feed', 'feeds'), countLabel(u.sleeps.length, 'sleep', 'sleeps'), countLabel(u.diapers.length, 'diaper change', 'diaper changes'),
+    countLabel((u.screens || []).length, 'screen time session', 'screen time sessions')].join(', ');
   const when = (ms) => { const k = dayKey(ms); const day = k === dayKey(Date.now()) ? 'today' : k === dayKey(Date.now() + DAY) ? 'tomorrow' : k === dayKey(Date.now() - DAY) ? 'yesterday' : dayLabel(ms); return `${day} at ${clock(ms)}`; };
   const within = (p, ms) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error('timeout')), ms))]);
   loadUndo();
@@ -1300,7 +1457,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
   async function clearAll(me) {
     const err = $('reset-err'); err.hidden = true;
     $('btn-reset-yes').disabled = true; $('btn-reset-yes').textContent = 'Saving a copy...';
-    const copy = JSON.parse(JSON.stringify({ feeds: state.feeds, sleeps: state.sleeps, diapers: state.diapers,
+    const copy = JSON.parse(JSON.stringify({ feeds: state.feeds, sleeps: state.sleeps, diapers: state.diapers, screens: state.screens,
       name: state.name, intervalMin: state.intervalMin, snoozeMin: state.snoozeMin, clearedAt: Date.now(), by: me }));
     if (remote) {
       store.set(ME_KEY, me); $('set-me').value = me;
@@ -1316,6 +1473,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
     state.feeds.forEach((f) => removeFeed(f.id));
     state.sleeps.forEach((x) => removeSleep(x.id));
     state.diapers.forEach((x) => removeDiaper(x.id));
+    state.screens.forEach((x) => { if (x.end == null) cancelScreenTimer(x); removeScreen(x.id); });
     const sound = state.sound; state = blank(); state.sound = sound;
     announce(`clear-${copy.clearedAt}`, 'All data cleared', `${contents(copy)} were deleted. Anyone can undo this from the app for 24 hours.`, 'warning');
     save(); closeSettings(); render(); scheduleReminder();
@@ -1326,6 +1484,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
     u.feeds.forEach((f) => { if (!has(state.feeds, f.id)) { state.feeds.push(f); pushFeed(f); } });
     u.sleeps.forEach((x) => { if (!has(state.sleeps, x.id)) { state.sleeps.push(x); pushSleep(x); } });
     u.diapers.forEach((x) => { if (!has(state.diapers, x.id)) { state.diapers.push(x); pushDiaper(x); } });
+    (u.screens || []).forEach((x) => { if (!has(state.screens, x.id)) { state.screens.push(x); pushScreen(x); } });
     if (u.name) state.name = u.name;
     if (u.intervalMin >= 15) state.intervalMin = u.intervalMin;
     if (u.snoozeMin) state.snoozeMin = u.snoozeMin;
@@ -1333,7 +1492,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
     if (remote) remote.fs.deleteDoc(undoRef()).catch(() => {});
     // Same sequence ID as the clear notification, so it replaces that one on everyone's phone.
     announce(`clear-${u.clearedAt}`, 'Cleared data restored', `${contents(u)} are back in the log.`, 'leftwards_arrow_with_hook');
-    state.alertedFor = null; save(); render(); scheduleReminder();
+    state.alertedFor = null; save(); render(); scheduleReminder(); bookScreenTimer(false);
   }
   function renderUndo() {
     if (undo && !undoLive()) { // a day has passed: the clear is final
@@ -1467,7 +1626,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
   $('home-sleep-toggle').addEventListener('click', toggleSleep);
 
   function renderRecSync() {
-    [['sleeps', 'sleep-sync-note', 'Sleeps'], ['diapers', 'diaper-sync-note', 'Diaper changes']].forEach(([col, id, what]) => {
+    [['sleeps', 'sleep-sync-note', 'Sleeps'], ['diapers', 'diaper-sync-note', 'Diaper changes'], ['screens', 'screen-sync-note', 'Screen times']].forEach(([col, id, what]) => {
       const el = $(id);
       if (recSync[col] === 'error') { el.hidden = false; el.className = 'note'; el.textContent = `${what} are saved on this phone but aren't reaching the family log yet. They will upload once it accepts them.`; return; }
       el.hidden = syncState !== 'live'; el.className = 'note ok'; el.textContent = `Shared with family. ${what} logged on any phone show up here.`;
@@ -1719,12 +1878,223 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
   });
 
   // ---------- dashboard ----------
+  // ---------- screen time ----------
+  // A session runs from start to end (null while the screen is on). limitMin is the timer, counted from
+  // start, so "+5 min" just raises it. The chosen timer length and device are remembered per phone.
+  const SCREEN_MINS_KEY = 'feeding-tracker.screenMins';
+  const SCREEN_ON_KEY = 'feeding-tracker.screenOn';
+  const SCREEN_ALERTED_KEY = 'feeding-tracker.screenAlerted';
+  const SCREEN_MINS = [5, 10, 15, 20, 30, 45, 60];
+  const SCREEN_ONS = ['TV', 'Tablet', 'Phone', 'Other'];
+  let screenMins = 30;
+  { const v = store.get(SCREEN_MINS_KEY); if (v !== null && v !== '' && (v === '0' || SCREEN_MINS.includes(Number(v)))) screenMins = Number(v); }
+  let screenOn = SCREEN_ONS.includes(store.get(SCREEN_ON_KEY)) ? store.get(SCREEN_ON_KEY) : '';
+  const scrEnd = (x, now) => (x.end == null ? now : x.end);
+  const scrOverlap = (x, a, b, now) => Math.max(0, Math.min(scrEnd(x, now), b) - Math.max(x.start, a));
+  const screenIn = (a, b, now) => state.screens.reduce((s2, x) => s2 + scrOverlap(x, a, b, now), 0);
+  const sortedScreens = () => [...state.screens].sort((a, b) => b.start - a.start);
+  const activeScreen = () => sortedScreens().find((x) => x.end == null) || null;
+  const timerEnd = (x) => (x && x.limitMin ? x.start + x.limitMin * MIN : null);
+  const timerLabel = (m) => (m ? `${m} min timer` : 'no timer');
+  const minsLabel = (m) => (m === 60 ? '1 hr' : `${m} min`);
+  const screensToday = (now) => state.screens.filter((x) => scrEnd(x, now) > startOfDay(now));
+  // Start and stop ignore a second tap within 3 seconds, so a double tap doesn't start and stop at once.
+  let lastScreenTap = 0;
+  const screenTapGuard = () => Date.now() - lastScreenTap < 3000;
+  function startScreen() {
+    if (activeScreen() || screenTapGuard()) return;
+    lastScreenTap = Date.now(); unlockAudio();
+    const x = { id: makeId(), start: Date.now(), end: null, limitMin: screenMins || null, on: screenOn };
+    state.screens.push(x); pushScreen(x); saveLocal(); render();
+    bookScreenTimer(false);
+    const e = timerEnd(x);
+    announce(x.id, `${state.name} started screen time`, `${x.on ? `On ${x.on} since` : 'Since'} ${clock(x.start)}${e ? `, ${x.limitMin} min timer ends ${clock(e)}` : ', no timer'}.`, 'tv');
+    toast(e ? `Screen time started · timer ends ${clock(e)}` : 'Screen time started');
+    if (fbConfig && !remote && !connecting) connect();
+  }
+  function endScreen() {
+    const a = activeScreen(); if (!a || screenTapGuard()) return;
+    lastScreenTap = Date.now();
+    cancelScreenTimer(a);
+    const now = Date.now();
+    state.screens.filter((x) => x.end == null).forEach((x) => { x.end = Math.max(now, x.start + 1000); pushScreen(x); });
+    announce(a.id, 'Screen time over', `${dur(a.end - a.start)}${a.on ? ` on ${a.on}` : ''} (${clock(a.start)} – ${clock(a.end)}).`, 'tv,white_check_mark');
+    toast(`Screen off · ${dur(a.end - a.start)}`);
+    saveLocal(); render();
+  }
+  const toggleScreen = () => (activeScreen() ? endScreen() : startScreen());
+  // Adds time to the timer. Once it has ended, or with no timer yet, the extra minutes count from now.
+  function extendScreen(m) {
+    const a = activeScreen(); if (!a) return;
+    const now = Date.now(); const e = timerEnd(a);
+    a.limitMin = Math.min(24 * 60, Math.ceil(((e && e > now ? e : now) + m * MIN - a.start) / MIN));
+    pushScreen(a); saveLocal(); render(); bookScreenTimer(false);
+    toast(`Timer now ends ${clock(timerEnd(a))}`);
+  }
+  $('btn-screen-toggle').addEventListener('click', toggleScreen);
+  $('home-screen-toggle').addEventListener('click', toggleScreen);
+  $('home-screen-more').addEventListener('click', () => extendScreen(5));
+  $('btn-screen-alert-off').addEventListener('click', endScreen);
+  $('btn-screen-alert-more').addEventListener('click', () => extendScreen(5));
+  document.querySelectorAll('[data-more]').forEach((b) => b.addEventListener('click', () => extendScreen(Number(b.dataset.more))));
+
+  // With the app open, the end of the timer chimes and shows a banner on every tab. Phones in a family
+  // also get the ntfy notification booked above, which arrives even when the app is closed.
+  function notifyScreen(a) {
+    let perm = 'denied';
+    try { if (canNotify()) perm = Notification.permission; } catch (e) {}
+    if (perm !== 'granted' || pushTopic()) return; // ntfy already covers phones in a family
+    const title = `Screen time is up for ${state.name}`; const body = `The ${a.limitMin} min timer ended.`;
+    try {
+      if (swReg && swReg.showNotification) swReg.showNotification(title, { body, tag: 'screen-up', renotify: true, data: { action: 'screen' } });
+      else { const n = new Notification(title, { body, tag: 'screen-up' }); n.onclick = () => { window.focus(); setTab('screen'); n.close(); }; }
+    } catch (e) {}
+  }
+  function tickScreen() {
+    const now = Date.now(); const a = activeScreen(); const e = timerEnd(a); const up = !!(a && e && now >= e);
+    const today = screensToday(now); const total = screenIn(startOfDay(now), now, now);
+    $('screen-hero').classList.toggle('is-on', !!a); $('screen-hero').classList.toggle('is-up', up);
+    $('screen-state').textContent = a ? (up ? 'Screen time is up' : e ? 'Timer ends in' : 'Screen on for') : 'Screen time today';
+    $('screen-timer').textContent = a ? (up ? `+${countdown(now - e)}` : e ? countdown(e - now) : countdown(now - a.start)) : dur(total);
+    $('screen-since').textContent = a ? `Started ${clock(a.start)}${a.on ? ` on ${a.on}` : ''}${e ? ` · timer ${up ? 'ended' : 'ends'} ${clock(e)}` : ' · no timer'}`
+      : today.length ? `${today.length} ${today.length === 1 ? 'session' : 'sessions'} today` : 'Pick a timer and tap Start when the screen goes on.';
+    $('screen-bar').hidden = !(a && e); $('screen-bar').classList.toggle('up', up);
+    if (a && e) $('screen-bar-fill').style.width = `${Math.min(100, ((now - a.start) / (e - a.start)) * 100)}%`;
+    $('screen-alert').hidden = !up;
+    if (up) {
+      $('screen-alert-title').textContent = `Screen time is up for ${state.name}`;
+      $('screen-alert-body').textContent = `On ${a.on || 'a screen'} for ${dur(now - a.start)}. The ${a.limitMin} min timer ended at ${clock(e)}.`;
+      const k = `${a.id}|${e}`;
+      if (store.get(SCREEN_ALERTED_KEY) !== k) {
+        store.set(SCREEN_ALERTED_KEY, k);
+        if (now - e < 5 * MIN) { chime(); try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (err) {} notifyScreen(a); }
+      }
+    }
+  }
+  function screenChips(host, opts, cur, pick) {
+    host.innerHTML = '';
+    opts.forEach(([v, label]) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
+      b.setAttribute('aria-pressed', String(cur === v)); b.onclick = () => pick(v);
+      host.appendChild(b);
+    });
+  }
+  function renderScreen() {
+    const a = activeScreen();
+    $('screen-pick').hidden = !!a; $('screen-more').hidden = !a;
+    const btn = $('btn-screen-toggle');
+    btn.textContent = a ? 'Screen off' : `Start · ${timerLabel(screenMins)}`; btn.className = a ? 'primary big' : 'screen big';
+    screenChips($('screen-mins'), [[0, 'None']].concat(SCREEN_MINS.map((m) => [m, minsLabel(m)])), screenMins,
+      (v) => { screenMins = v; store.set(SCREEN_MINS_KEY, String(v)); renderScreen(); });
+    screenChips($('screen-on'), SCREEN_ONS.map((o) => [o, o]), screenOn,
+      (v) => { screenOn = screenOn === v ? '' : v; store.set(SCREEN_ON_KEY, screenOn); renderScreen(); });
+    $('screen-push-note').textContent = pushTopic()
+      ? 'When the timer ends, every phone subscribed to your family\'s ntfy topic gets a notification, even with the app closed.'
+      : 'Keep the app open to hear the timer. To get it on your phone with the app closed, set up Phone notifications in Settings.';
+    tickScreen(); renderRecSync(); renderScreenLog();
+  }
+
+  let pendingScreenDelete = null;
+  function renderScreenLog() {
+    const list = sortedScreens(); const log = $('screen-log'); const now = Date.now();
+    $('screen-count').textContent = list.length === 1 ? '1 session' : `${list.length} sessions`;
+    if (!list.length) { log.innerHTML = '<p class="empty">No screen time yet. Tap Start when the screen goes on.</p>'; return; }
+    const groups = [];
+    list.forEach((x) => {
+      const k = dayKey(x.start); let g = groups[groups.length - 1];
+      if (!g || g.key !== k) { g = { key: k, label: dayLabel(x.start), items: [], total: 0 }; groups.push(g); }
+      g.items.push(x); g.total += scrEnd(x, now) - x.start;
+    });
+    log.innerHTML = '';
+    groups.slice(0, 14).forEach((g) => {
+      const day = document.createElement('div'); day.className = 'day';
+      day.innerHTML = '<div class="day-head"><h3></h3><span class="total num"></span></div>';
+      day.querySelector('h3').textContent = g.label;
+      day.querySelector('.total').textContent = `${dur(g.total)} · ${g.items.length} ${g.items.length === 1 ? 'session' : 'sessions'}`;
+      g.items.forEach((x) => {
+        const row = document.createElement('div'); row.className = 'sentry' + (x.end == null ? ' live' : '');
+        if (pendingScreenDelete === x.id) {
+          row.innerHTML = '<span class="note">Delete this screen time?</span><span class="acts"><button type="button" class="small due">Delete</button><button type="button" class="small">Keep</button></span>';
+          const [del, keep] = row.querySelectorAll('button');
+          del.onclick = () => {
+            if (x.end == null) cancelScreenTimer(x);
+            state.screens = state.screens.filter((y) => y.id !== x.id); removeScreen(x.id);
+            announce(x.id, 'Screen time deleted', `The screen time from ${clock(x.start)} was removed from the log.`, 'wastebasket');
+            pendingScreenDelete = null; saveLocal(); render();
+          };
+          keep.onclick = () => { pendingScreenDelete = null; renderScreenLog(); };
+        } else {
+          row.innerHTML = '<span><span class="t num"></span><span class="tag num"></span></span><span class="acts"><button type="button" class="ghost small">Edit</button><button type="button" class="ghost small">Delete</button></span>';
+          const len = scrEnd(x, now) - x.start; const over = x.limitMin ? len - x.limitMin * MIN : 0;
+          row.querySelector('.t').textContent = `${clock(x.start)} – ${x.end == null ? 'now' : clock(x.end)}`;
+          row.querySelector('.tag').textContent = [x.end == null ? `on now · ${dur(len)}` : dur(len), x.on,
+            x.limitMin ? `${x.limitMin} min timer${over >= MIN ? `, ${dur(over)} over` : ''}` : ''].filter(Boolean).join(' · ');
+          const [edit, del] = row.querySelectorAll('button');
+          edit.onclick = () => openScreenSheet(x);
+          del.onclick = () => { pendingScreenDelete = x.id; renderScreenLog(); };
+        }
+        day.appendChild(row);
+      });
+      log.appendChild(day);
+    });
+  }
+
+  // ---------- screen time sheet (add an earlier session, or edit one) ----------
+  let editingScreen = null; let sheetOn = '';
+  function syncScreenSheet() {
+    screenChips($('screen-sheet-on'), SCREEN_ONS.map((o) => [o, o]), sheetOn, (v) => { sheetOn = sheetOn === v ? '' : v; syncScreenSheet(); });
+  }
+  function openScreenSheet(x) {
+    editingScreen = x ? x.id : null; sheetOn = x ? x.on : '';
+    const now = Date.now();
+    $('screen-sheet-title').textContent = x ? 'Edit screen time' : 'Add screen time';
+    $('screen-start').value = toLocalInput(x ? x.start : now - 30 * MIN);
+    $('screen-end').value = x ? (x.end == null ? '' : toLocalInput(x.end)) : toLocalInput(now);
+    $('btn-screen-save').textContent = x ? 'Save changes' : 'Save';
+    $('screen-err').hidden = true;
+    syncScreenSheet();
+    $('screen-sheet').hidden = false;
+  }
+  const closeScreen = () => { $('screen-sheet').hidden = true; editingScreen = null; };
+  $('btn-screen-add').addEventListener('click', () => openScreenSheet(null));
+  $('btn-screen-cancel').addEventListener('click', closeScreen);
+  $('screen-sheet').addEventListener('click', (e) => { if (e.target === $('screen-sheet')) closeScreen(); });
+  $('screen-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const now = Date.now(); const err = $('screen-err');
+    const fail = (t) => { err.textContent = t; err.hidden = false; };
+    let st = fromLocalInput($('screen-start').value);
+    let en = $('screen-end').value ? fromLocalInput($('screen-end').value) : null;
+    if (st == null) return fail('Pick when the screen time started.');
+    const x0 = state.screens.find((y) => y.id === editingScreen);
+    // Keep the exact seconds of a running session when its start minute wasn't changed, so its timer doesn't move.
+    if (x0 && roundToMinute(x0.start) === st) st = x0.start;
+    if (x0 && x0.end != null && en != null && roundToMinute(x0.end) === en) en = x0.end;
+    if (st > now + MIN) return fail('That start time is in the future.');
+    if (en != null && en > now + MIN) return fail('That end time is in the future. Leave it empty if the screen is still on.');
+    if (en != null && en <= st) return fail('Ended has to be after started.');
+    if (scrEnd({ end: en }, now) - st > DAY) return fail('That is longer than 24 hours. Check the dates.');
+    const others = state.screens.filter((y) => y.id !== editingScreen);
+    if (en == null && others.some((y) => y.end == null)) return fail('Other screen time is still running. Tap Screen off on that one first.');
+    const clash = others.find((y) => st < scrEnd(y, now) && scrEnd({ end: en }, now) > y.start);
+    if (clash) return fail(`This overlaps the screen time from ${clock(clash.start)} to ${clash.end == null ? 'now' : clock(clash.end)}. Edit that one instead.`);
+    const wasOn = !!(x0 && x0.end == null);
+    let x = x0; const isEdit = !!x;
+    if (wasOn && en != null) cancelScreenTimer(x);
+    if (x) Object.assign(x, { start: st, end: en, on: sheetOn }); else { x = { id: makeId(), start: st, end: en, limitMin: null, on: sheetOn }; state.screens.push(x); }
+    pushScreen(x); saveLocal(); closeScreen(); render();
+    if (x.end == null) bookScreenTimer(false);
+    toast(isEdit ? 'Screen time saved' : 'Screen time added');
+    announce(x.id, isEdit ? 'Screen time updated' : `${state.name} had screen time`,
+      `${x.end == null ? `On since ${clock(x.start)}` : `${clock(x.start)} – ${clock(x.end)} (${dur(x.end - x.start)})`}${x.on ? ` on ${x.on}` : ''}.`, isEdit ? 'tv,pencil2' : 'tv');
+  });
+
   // What Home shows is a per-phone choice, kept in localStorage.
   const DASH_KEY = 'feeding-tracker.dash';
-  const dash = { feeds: true, sleep: true, diapers: true, days: 7 };
+  const dash = { feeds: true, sleep: true, diapers: true, screen: true, days: 7 };
   try { Object.assign(dash, JSON.parse(store.get(DASH_KEY) || '{}')); } catch (e) {}
   if (![7, 14, 30].includes(dash.days)) dash.days = 7;
-  const KINDS = ['feeds', 'sleep', 'diapers'];
+  const KINDS = ['feeds', 'sleep', 'diapers', 'screen'];
   function applyDash() {
     document.querySelectorAll('#dash-kinds button').forEach((b) => b.setAttribute('aria-pressed', String(!!dash[b.dataset.kind])));
     document.querySelectorAll('#dash-days button').forEach((b) => b.setAttribute('aria-pressed', String(dash.days === Number(b.dataset.days))));
@@ -1732,7 +2102,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
     $('wk-title').textContent = `Last ${dash.days} days`;
     $('now-grid').classList.toggle('one', !(dash.sleep && dash.diapers));
   }
-  const saveDash = () => { store.set(DASH_KEY, JSON.stringify(dash)); chartSel.oz = chartSel.sleep = chartSel.dia = null; grown.oz = grown.sleep = grown.dia = false; hideTip(); renderHome(); };
+  const saveDash = () => { store.set(DASH_KEY, JSON.stringify(dash)); chartSel.oz = chartSel.sleep = chartSel.dia = chartSel.scr = null; grown.oz = grown.sleep = grown.dia = grown.scr = false; hideTip(); renderHome(); };
   document.querySelectorAll('#dash-kinds button').forEach((b) => b.addEventListener('click', () => {
     const k = b.dataset.kind;
     if (dash[k] && KINDS.filter((x) => dash[x]).length === 1) return; // keep at least one tracker on
@@ -1766,6 +2136,16 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
     const d = lastDiaper(); const lp = lastPoo();
     $('home-diaper-big').textContent = d ? ago(now - d.time) : '--';
     $('home-diaper-sub').textContent = d ? `${DKINDS[d.kind]} at ${clock(d.time)}${lp && lp !== d ? ` · last poo ${ago(now - lp.time)}` : ''}` : 'No changes logged yet';
+    const sc = activeScreen(); const se = timerEnd(sc); const sup = !!(sc && se && now >= se);
+    const scToday = screensToday(now);
+    $('home-screen-card').classList.toggle('is-on', !!sc); $('home-screen-card').classList.toggle('is-up', sup);
+    $('home-screen-label').textContent = sc ? (sup ? 'Screen time is up' : se ? 'Screen timer ends in' : 'Screen on for') : 'Screen time today';
+    $('home-screen-big').textContent = sc ? (sup ? `+${countdown(now - se)}` : se ? countdown(se - now) : dur(now - sc.start)) : dur(screenIn(startOfDay(now), now, now));
+    $('home-screen-sub').textContent = sc ? `${sc.on ? `On ${sc.on} since` : 'Since'} ${clock(sc.start)}${se ? ` · ${sup ? 'ended' : 'ends'} ${clock(se)}` : ''}`
+      : scToday.length ? `${scToday.length} ${scToday.length === 1 ? 'session' : 'sessions'} today` : 'None logged today';
+    const hb = $('home-screen-toggle');
+    hb.textContent = sc ? 'Screen off' : `Start · ${timerLabel(screenMins)}`; hb.className = sc ? 'primary small' : 'screen small';
+    $('home-screen-more').hidden = !sc;
   }
   const hours = (ms) => { const h = ms / 3600000; return h >= 10 ? `${Math.round(h)}h` : `${Math.round(h * 10) / 10}h`; };
   const round1 = (n) => Math.round(n * 10) / 10;
@@ -1829,7 +2209,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
   // ---------- 24-hour timeline: one lane each for feeds, sleep and diapers ----------
   function renderTimeline(now) {
     const host = $('timeline'); const cap = $('timeline-cap'); const day0 = now - DAY;
-    const lanes = [['feeds', 'FEEDS'], ['sleep', 'SLEEP'], ['diapers', 'DIAPERS']].filter(([k]) => dash[k]);
+    const lanes = [['feeds', 'FEEDS'], ['sleep', 'SLEEP'], ['diapers', 'DIAPERS'], ['screen', 'SCREEN']].filter(([k]) => dash[k]);
     const W = 340; const L = 54; const R = 6; const LH = 26; const top = 4; const H = top + lanes.length * (LH + 6) + 18;
     const xs = (t) => L + ((t - day0) / DAY) * (W - L - R);
     const svg = svgEl(host, W, H);
@@ -1864,6 +2244,16 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
           bindMark(hit, host, cap, [[`${oz(x.oz)} oz`, `Feed at ${clock(x.time)}`, css('--feed-mark')]], [c]);
         });
         if (list.length) sum.push(`${oz(round1(list.reduce((s2, x) => s2 + x.oz, 0)))} oz`);
+      } else if (k === 'screen') {
+        const list = state.screens.filter((x) => scrEnd(x, now) > day0);
+        list.forEach((x) => {
+          const a = Math.max(x.start, day0); const b = scrEnd(x, now);
+          const r = add(svg, 'rect', { class: 'c-blk mk', x: xs(a), y: y + 4, width: Math.max(3, xs(b) - xs(a)), height: LH - 8, rx: 4 });
+          const hit = add(svg, 'rect', { class: 'hit', x: xs(a) - 4, y, width: Math.max(14, xs(b) - xs(a) + 8), height: LH });
+          bindMark(hit, host, cap, [[dur(b - x.start), `Screen${x.on ? ` (${x.on})` : ''} ${x.end == null ? 'on since' : ''} ${clock(x.start)}${x.end == null ? '' : ` – ${clock(x.end)}`}`.replace(/\s+/g, ' '), css('--screen-mark')]], [r]);
+        });
+        const tot = screenIn(day0, now, now);
+        if (tot) sum.push(`${dur(tot)} screen`);
       } else {
         const list = state.diapers.filter((x) => x.time > day0);
         list.forEach((x) => {
@@ -1905,6 +2295,10 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
         const a = Math.max(x.start, d.a); const b = Math.min(sleepEnd(x, now), d.b);
         if (b > a) marks.push(add(svg, 'rect', { class: 's-blk mk', x: fx(a), y: y + 2, width: Math.max(2, fx(b) - fx(a)), height: rowH - 4, rx: 3 }));
       });
+      if (dash.screen) state.screens.forEach((x) => {
+        const a = Math.max(x.start, d.a); const b = Math.min(scrEnd(x, now), d.b);
+        if (b > a) marks.push(add(svg, 'rect', { class: 'c-blk mk', x: fx(a), y: y + 2, width: Math.max(2, fx(b) - fx(a)), height: rowH - 4, rx: 3 }));
+      });
       if (dash.diapers) d.dlist.forEach((x) => marks.push(add(svg, 'rect', { class: 'd-tick mk', x: fx(x.time) - 1.5, y: y + rowH * 0.55, width: 3, height: rowH * 0.45 - 1, rx: 1.5 })));
       if (dash.feeds) d.flist.forEach((x) => marks.push(add(svg, 'circle', { class: 'f-dot mk', cx: fx(x.time), cy: y + rowH * 0.32, r: n > 14 ? 3 : 4, 'stroke-width': n > 14 ? 1.5 : 2 })));
       const hit = add(svg, 'rect', { class: 'hit', x: 0, y: y - gap / 2, width: W, height: rowH + gap });
@@ -1912,6 +2306,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
       if (dash.feeds) rows.push([`${oz(round1(d.oz))} oz`, `${d.feeds} ${d.feeds === 1 ? 'feed' : 'feeds'}`, css('--feed-mark')]);
       if (dash.sleep) rows.push([dur(d.sleep), 'sleep', css('--sleep-mark')]);
       if (dash.diapers) rows.push([String(d.dia), d.dia === 1 ? 'diaper' : 'diapers', css('--diaper-mark')]);
+      if (dash.screen) rows.push([dur(d.scr), 'screen time', css('--screen-mark')]);
       rows.unshift([d.name, '']);
       bindMark(hit, host, cap, rows, marks);
     });
@@ -1919,7 +2314,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
   }
 
   // ---------- per-day bar chart ----------
-  const chartSel = { oz: null, sleep: null, dia: null };
+  const chartSel = { oz: null, sleep: null, dia: null, scr: null };
   const grown = {};
   function barChart(host, cap, key, data, cls, avg, fmtAxis, color, minPeak) {
     const W = 340, H = 150, top = 14, bottom = 22, left = 30, n = data.length;
@@ -2003,11 +2398,12 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
         dateShort: d.toLocaleDateString([], { month: 'short', day: 'numeric' }),
         oz: flist.reduce((s2, x) => s2 + x.oz, 0), feeds: flist.length,
         sleep: state.sleeps.reduce((s2, x) => s2 + overlap(x, a, b, now), 0),
-        dia: dlist.length, pee: dlist.filter(hasPee).length, poo: dlist.filter(hasPoo).length });
+        dia: dlist.length, pee: dlist.filter(hasPee).length, poo: dlist.filter(hasPoo).length,
+        scr: screenIn(a, b, now), scrN: state.screens.filter((x) => x.start >= a && x.start < b).length });
     }
     // Averages use finished days that have something logged, so a half-done today doesn't drag them down.
     const avgOf = (k) => { const full = days.filter((d) => !d.today && d[k] > 0); return full.length ? full.reduce((s2, d) => s2 + d[k], 0) / full.length : null; };
-    const ozAvg = avgOf('oz'); const feedAvg = avgOf('feeds'); const slAvg = avgOf('sleep'); const diaAvg = avgOf('dia');
+    const ozAvg = avgOf('oz'); const feedAvg = avgOf('feeds'); const slAvg = avgOf('sleep'); const diaAvg = avgOf('dia'); const scrAvg = avgOf('scr');
 
     // Today tiles
     const td = days[days.length - 1];
@@ -2026,6 +2422,10 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
     $('st-longest').textContent = longest ? dur(longest) : '--';
     $('st-dia').textContent = String(td.dia); $('st-pee').textContent = String(td.pee); $('st-poo').textContent = String(td.poo);
     meter('dia', td.dia, diaAvg, `avg ${round1(diaAvg || 0)}/day`);
+    $('st-scr').textContent = dur(td.scr); $('st-scr-n').textContent = String(td.scrN);
+    meter('scr', td.scr, scrAvg, `avg ${dur(scrAvg || 0)}/day`);
+    const scrLong = Math.max(0, ...state.screens.map((x) => scrOverlap(x, today0, now, now)));
+    $('st-scr-long').textContent = scrLong ? dur(scrLong) : '--';
 
     renderTimeline(now);
     renderRhythm(days, now);
@@ -2033,6 +2433,7 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
     $('wk-oz-hero').innerHTML = ozAvg != null ? `avg <b>${esc(oz(round1(ozAvg)))}</b> oz/day` : '';
     $('wk-sleep-hero').innerHTML = slAvg != null ? `avg <b>${esc(hours(slAvg))}</b>/day` : '';
     $('wk-dia-hero').innerHTML = diaAvg != null ? `avg <b>${esc(String(round1(diaAvg)))}</b>/day` : '';
+    $('wk-scr-hero').innerHTML = scrAvg != null ? `avg <b>${esc(dur(scrAvg))}</b>/day` : '';
     barChart($('wk-oz'), $('wk-oz-cap'), 'oz', days.map((d) => ({ value: d.oz, label: d.label, today: d.today, short: oz(round1(d.oz)),
       caption: `${d.name}: ${oz(d.oz)} oz in ${d.feeds} ${d.feeds === 1 ? 'feed' : 'feeds'}`,
       tip: [[`${oz(round1(d.oz))} oz`, d.name], [`${d.feeds} ${d.feeds === 1 ? 'feed' : 'feeds'}`, '']] })), 'bar-f', ozAvg, (v) => oz(v), css('--feed-mark'), 4);
@@ -2042,6 +2443,10 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
     barChart($('wk-dia'), $('wk-dia-cap'), 'dia', days.map((d) => ({ value: d.dia, label: d.label, today: d.today, short: String(d.dia),
       caption: `${d.name}: ${d.dia} ${d.dia === 1 ? 'change' : 'changes'} (${d.pee} with pee, ${d.poo} with poo)`,
       tip: [[`${d.dia} ${d.dia === 1 ? 'change' : 'changes'}`, d.name], [`${d.pee} pee · ${d.poo} poo`, '']] })), 'bar-d', diaAvg, (v) => String(round1(v)), css('--diaper-mark'), 4);
+    barChart($('wk-scr'), $('wk-scr-cap'), 'scr', days.map((d) => ({ value: d.scr / MIN, label: d.label, today: d.today, short: dur(d.scr),
+      caption: `${d.name}: ${dur(d.scr)} of screen time in ${d.scrN} ${d.scrN === 1 ? 'session' : 'sessions'}${d.today ? ' so far' : ''}`,
+      tip: [[dur(d.scr), `${d.name}${d.today ? ', so far' : ''}`], [`${d.scrN} ${d.scrN === 1 ? 'session' : 'sessions'}`, '']] })),
+      'bar-c', scrAvg && scrAvg / MIN, (v) => (v >= 60 ? `${Math.floor(v / 60)}h${Math.round(v % 60) ? ` ${Math.round(v % 60)}m` : ''}` : `${Math.round(v)}m`), css('--screen-mark'), 30);
   }
   $('home-log-feed').addEventListener('click', () => (lastFeed() ? openFeed(false) : setTab('feeds')));
 
@@ -2057,6 +2462,9 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
     $('q-sleep-l').firstChild.textContent = a ? 'Woke up' : 'Start sleep';
     $('q-sleep-sub').textContent = a ? `Asleep since ${clock(a.start)}` : 'Fell asleep now';
     $('q-feed-sub').textContent = f ? `Last ${oz(f.oz)} oz at ${clock(f.time)}` : 'Bottle and amount';
+    const sc = activeScreen();
+    $('q-screen-l').firstChild.textContent = sc ? 'Screen off' : 'Start screen time';
+    $('q-screen-sub').textContent = sc ? `On since ${clock(sc.start)}` : timerLabel(screenMins);
     applyLocks(); hideTip();
     $('quick-sheet').hidden = false;
   }
@@ -2066,10 +2474,11 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
   $('quick-sheet').addEventListener('click', (e) => { if (e.target === $('quick-sheet') || (e.target.closest && e.target.closest('[data-log]'))) closeQuick(); });
   $('q-feed').addEventListener('click', () => { closeQuick(); if (lastFeed()) openFeed(false); else setTab('feeds'); });
   $('q-sleep').addEventListener('click', () => { closeQuick(); toggleSleep(); });
+  $('q-screen').addEventListener('click', () => { closeQuick(); toggleScreen(); });
 
   // ---------- tabs ----------
   const TAB_KEY = 'feeding-tracker.tab';
-  let tab = ['home', 'feeds', 'sleep', 'diaper'].includes(store.get(TAB_KEY)) ? store.get(TAB_KEY) : 'home';
+  let tab = ['home', 'feeds', 'sleep', 'diaper', 'screen'].includes(store.get(TAB_KEY)) ? store.get(TAB_KEY) : 'home';
   function setTab(t) { tab = t; store.set(TAB_KEY, t); render(); window.scrollTo(0, 0); }
   document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('click', () => setTab(b.dataset.tab)));
 
@@ -2107,18 +2516,19 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
   function render() {
     const has = state.feeds.length > 0;
     // Tabs, Home and Sleep work before any feed is logged; only the Feeds tab shows the first-feed form.
-    ['home', 'feeds', 'sleep', 'diaper'].forEach((t) => { $('view-' + t).hidden = tab !== t; });
+    ['home', 'feeds', 'sleep', 'diaper', 'screen'].forEach((t) => { $('view-' + t).hidden = tab !== t; });
     $('setup').hidden = has || tab !== 'feeds'; $('clock').hidden = !has; $('history').hidden = !has;
     document.querySelectorAll('.tabs button').forEach((b) => { if (b.dataset.tab === tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
     $('avatar').textContent = (state.name || 'A').trim().charAt(0).toUpperCase() || 'A';
-    $('title').textContent = { home: `${state.name}'s day`, feeds: `${state.name}'s feeds`, sleep: `${state.name}'s sleep`, diaper: `${state.name}'s diapers` }[tab];
+    $('title').textContent = { home: `${state.name}'s day`, feeds: `${state.name}'s feeds`, sleep: `${state.name}'s sleep`, diaper: `${state.name}'s diapers`, screen: `${state.name}'s screen time` }[tab];
     $('subtitle').textContent = tab === 'feeds' && !has ? 'Bottle log and next-feed reminder'
       : tab === 'feeds' ? `Every ${dur(state.intervalMin * MIN)} · snooze ${state.snoozeMin} min`
       : tab === 'sleep' ? 'One tap when asleep, one tap when awake'
-      : tab === 'diaper' ? 'One tap per change, details if you want them' : 'Feeds, sleep and diapers at a glance';
+      : tab === 'diaper' ? 'One tap per change, details if you want them'
+      : tab === 'screen' ? 'Track screen time with a timer that tells you when it\'s up' : 'Feeds, sleep, diapers and screen time at a glance';
     if (!has) $('alert').hidden = true;
     else { renderLog(); renderNotif(); renderSync(); tick(); }
-    renderSleep(); renderDiaper(); applyLocks(); renderUndo();
+    renderSleep(); renderDiaper(); renderScreen(); applyLocks(); renderUndo();
     if (tab === 'home') { renderHome(); tickHome(); }
   }
 
@@ -2128,8 +2538,14 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
   if (h === 'fed' || h === 'snooze') {
     if (fbConfig && familyId) { pendingAction = h; setTimeout(() => { if (pendingAction) { pendingAction = null; handleAction(h); } }, 6000); } else handleAction(h);
     try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+  } else if (h === 'screen' || h === 'screenoff' || h === 'screenmore') {
+    setTab('screen');
+    if (h !== 'screen') {
+      if (fbConfig && familyId) { pendingScreen = h; setTimeout(() => { if (pendingScreen) { pendingScreen = null; handleAction(h); } }, 8000); } else handleAction(h);
+    }
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
   }
-  if (fbConfig && (familyId || state.feeds.length || state.sleeps.length || state.diapers.length)) connect();
+  if (fbConfig && (familyId || state.feeds.length || state.sleeps.length || state.diapers.length || state.screens.length)) connect();
   else if (fbConfig) { syncState = 'off'; $('join-form').hidden = false; if (leftLink) $('join-link').value = leftLink; }
   function joinFrom(input, err) {
     if (connecting) { err.textContent = 'Still connecting. Try again in a moment.'; err.hidden = false; return false; }
@@ -2159,13 +2575,14 @@ button.big { min-height: 60px; font-size: 1.12rem; width: 100%; border-radius: 1
   });
   let secs = 0;
   setInterval(() => {
-    tick(); tickSleep(); tickDiaper(); applyLocks(); secs++;
+    tick(); tickSleep(); tickDiaper(); tickScreen(); applyLocks(); secs++;
     if (tab === 'home') { tickHome(); if (secs % 60 === 0) renderHome(); }
     if (tab === 'sleep' && secs % 60 === 0) renderSleepLog();
+    if (tab === 'screen' && secs % 60 === 0) renderScreenLog();
     if (justLogged && secs % 60 === 0) renderDiaper();
   }, 1000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeFeed(); closeSettings(); closeSleep(); closeDiaper(); closeQuick(); hideTip(); } });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeFeed(); closeSettings(); closeSleep(); closeDiaper(); closeScreen(); closeQuick(); hideTip(); } });
 })();
 </script>
 </body></html>
