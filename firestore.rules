@@ -22,6 +22,15 @@ service cloud.firestore {
                               && request.resource.data.kind in ['pee', 'poo', 'both', 'dry']
                               && request.resource.data.note is string && request.resource.data.note.size() <= 200;
       }
+      match /screens/{screenId} {
+        allow read, delete: if true;
+        allow create, update: if request.resource.data.start is number
+                              && (request.resource.data.end == null
+                                  || (request.resource.data.end is number && request.resource.data.end > request.resource.data.start))
+                              && (request.resource.data.limitMin == null
+                                  || (request.resource.data.limitMin is number && request.resource.data.limitMin > 0 && request.resource.data.limitMin <= 1440))
+                              && request.resource.data.on is string && request.resource.data.on.size() <= 20;
+      }
       // One copy of the log from the last "Clear all data", kept so anyone can undo it for a day.
       match /undo/{docId} {
         allow read, delete: if docId == 'latest';

@@ -1,6 +1,6 @@
 # Ari's Feeding Clock
 
-A small installable web app that logs bottle feeds (in oz), reminds you when the next feed is due, and tracks sleep and diaper changes.
+A small installable web app that logs bottle feeds (in oz), reminds you when the next feed is due, and tracks sleep, diaper changes and screen time.
 
 ## Screens
 - **Home** – next feed countdown, asleep/awake timer and last diaper, each with its one-tap action, today's numbers,
@@ -12,6 +12,12 @@ A small installable web app that logs bottle feeds (in oz), reminds you when the
   Sleeps that start between 7 AM and 7 PM count as naps.
 - **Diapers** – tap Pee, Poo or Both after a change. "Add details" (or Edit in the log) records dry diapers,
   poo color and texture, diaper rash and a note. "Add an earlier change" logs one after the fact.
+- **Screen** – pick a timer (5 min to 1 hr, or none) and optionally what's being watched on (TV, tablet, phone),
+  then tap Start. The countdown shows how long is left; "+5 min" / "+15 min" extend it and Screen off ends the
+  session. When the timer runs out the app chimes and shows a banner, and phones subscribed to the family's ntfy
+  topic get a "Screen time is up" notification even with the app closed, with Screen off and 5 more min buttons.
+  "Add earlier screen time" logs a session after the fact. Home shows the running timer, today's total and a
+  screen time per day chart.
 
 Sleep and diaper buttons lock for 5 minutes after a log (from any phone), so a double tap can't log twice.
 Mistakes are fixed with Edit or Delete in the log.
@@ -33,7 +39,7 @@ Reminders fire while the app is open or in the background; browsers can't wake a
 3. Project settings → General → Your apps → add a Web app, and copy its config values into `firebase-config.js`.
 4. Open the app, go to Settings → Copy share link, and send that link to family. Everyone on that link sees the same feeds, sleeps, countdown, snoozes and reminders.
 
-Whenever `firestore.rules` changes (sleep tracking, diaper tracking and the undo for Clear all data each added rules), paste it into the Rules tab again and publish,
+Whenever `firestore.rules` changes (sleep tracking, diaper tracking, the undo for Clear all data and screen time each added rules), paste it into the Rules tab again and publish,
 so the shared log accepts the new records. Until then they stay on the phone that logged them and upload once the rules allow it.
 
 The link (`?family=<id>`) is the only key to the log, so share it only with people who should see it.
@@ -49,9 +55,13 @@ diaper, so everyone subscribed hears about it even with the app closed. Each rec
 so adding details replaces that record's notification instead of stacking a second one. Set "Your name on
 this phone" in Settings to have notifications say who logged it.
 
+The screen timer works the same way: starting screen time with a timer books a "Screen time is up" message
+for the timer's end under the sequence ID `screen-timer`. Extending re-books it, and Screen off (or deleting
+the session) cancels it if it hasn't gone off yet.
+
 ## Data
 Without a Firebase config, feeds stay in each browser's localStorage under `feeding-tracker.v1`.
-With one, feeds and sleeps live in Firestore under `families/<id>` (`feeds`, `sleeps` and `diapers` subcollections) and a copy is cached on each phone.
+With one, feeds and sleeps live in Firestore under `families/<id>` (`feeds`, `sleeps`, `diapers` and `screens` subcollections) and a copy is cached on each phone.
 
 ## Alexa announcements
 `functions/` holds a Firebase scheduled function that checks the family's next feed every minute and,
